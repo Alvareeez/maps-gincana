@@ -42,6 +42,19 @@ function guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud
         .then(response => response.json())
         .then(data => {
             console.log('Lugar destacado guardado:', data);
+
+            // Añadir el marcador al mapa
+            var marker = L.marker([latitud, longitud]).addTo(map)
+                .bindPopup(`<b>${nombre}</b><br>${descripcion}<br>Dirección: ${direccion}`)
+                .openPopup();
+
+            // Habilitar la eliminación del marcador con clic derecho
+            marker.on('contextmenu', function () {
+                if (confirm('¿Deseas eliminar este lugar?')) {
+                    map.removeLayer(marker);
+                    eliminarLugarDestacado(data.id);
+                }
+            });
         })
         .catch(error => console.error('Error al guardar el lugar destacado:', error));
 }
@@ -65,29 +78,52 @@ function eliminarLugarDestacado(id) {
 map.on('click', function (e) {
     var latlng = e.latlng;
 
-    // Solicitar información del usuario para el nuevo lugar
-    var nombre = prompt('Introduce el nombre del lugar:');
-    var descripcion = prompt('Introduce una descripción del lugar:');
-    var direccion = prompt('Introduce la dirección del lugar:');
-    var tipoMarcador = 'default'; // Puedes cambiar esto según el tipo de marcador que desees
+    // Mostrar un modal de SweetAlert2 para ingresar los datos del lugar
+    Swal.fire({
+        title: 'Crear un nuevo lugar',
+        html: `
+        <div class="my-3">
+            <input type="text" id="nombre" class="form-control my-3" placeholder="Nombre">
+            <input type="text" id="descripcion" class="form-control my-3" placeholder="Descripción">
+            <input type="text" id="direccion" class="form-control my-3" placeholder="Dirección">
+            <select type="text" id="tipoMarcador" class="form-control my-3" value="default">
+                <option selected disabled value="default">Default</option>
+                    @foreach($tipoMarcadores as $tipo)
+                        <option value="${{ $tiponombre }}"</option>
+                    @endforeach
+            </select>
+            <input type="number" id="latitud" class="form-control my-3" value="${latlng.lat}">
+            <input type="number" id="longitud" class="form-control my-3" value="${latlng.lng}">
 
-    if (nombre && descripcion && direccion) {
-        // Añadir un marcador en la ubicación clickeada
-        var newMarker = L.marker(latlng).addTo(map)
-            .bindPopup(`<b>${nombre}</b><br>${descripcion}<br>Dirección: ${direccion}`)
-            .openPopup();
+        </div>
+        `,
+        confirmButtonText: 'Guardar',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        focusConfirm: false,
+        preConfirm: () => {
+            const nombre = document.getElementById('nombre').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const direccion = document.getElementById('direccion').value;
+            const latitud = document.getElementById('latitud').value;
+            const longitud = document.getElementById('longitud').value;
+            const tipoMarcador = document.getElementById('tipoMarcador').value;
 
-        // Guardar el lugar en la base de datos
-        guardarLugarDestacado(nombre, descripcion, direccion, latlng.lat, latlng.lng, tipoMarcador);
-
-        // Habilitar la eliminación del marcador con clic derecho
-        newMarker.on('contextmenu', function () {
-            if (confirm('¿Deseas eliminar este lugar?')) {
-                map.removeLayer(newMarker);
-                eliminarLugarDestacado(newMarker.options.id); // Eliminar de la base de datos
+            if (!nombre || !descripcion || !direccion || !latitud || !longitud || !tipoMarcador) {
+                Swal.showValidationMessage('Por favor, completa todos los campos');
+                return false;
             }
-        });
-    }
+
+            return { nombre, descripcion, direccion, latitud, longitud, tipoMarcador };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { nombre, descripcion, direccion, latitud, longitud, tipoMarcador } = result.value;
+
+            // Guardar el lugar en la base de datos
+            guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador);
+        }
+    });
 });
 
 // Cargar los lugares destacados al iniciar el mapa
