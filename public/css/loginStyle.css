@@ -1,0 +1,114 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+    font-family: 'Poppins', sans-serif; /* Cambié la fuente aquí */
+    background-color: #1e1e1e;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Main container for the login page */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    max-width: 1000px;
+    background-color: #222;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Logo styling */
+.logo img {
+    width: 200px;
+    height: auto;
+    margin-right: 30px;
+}
+
+/* Login form container */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Header for login form */
+.login-form h1 {
+    color: #f7b500;
+    font-size: 2rem;
+    font-weight: 600; /* Puse un peso de fuente más alto para darle más presencia */
+    margin-bottom: 30px;
+}
+
+/* Input field styles */
+.login-form input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #444;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif; /* Usé la misma fuente para mantener la coherencia */
+    transition: all 0.3s ease-in-out;
+}
+
+.login-form input:focus {
+    border-color: #f7b500;
+    background-color: #444;
+    outline: none;
+}
+
+/* Submit button styles */
+.login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #f7b500;
+    color: #222;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+.login-form button:hover {
+    background-color: #f7a700;
+}
+
+/* Responsiveness for mobile */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        padding: 20px 10px;
+    }
+
+    .logo img {
+        width: 150px;
+        margin-bottom: 20px;
+    }
+
+    .login-form h1 {
+        font-size: 1.6rem;
+    }
+
+    .login-form button {
+        font-size: 1.1rem;
+    }
+}
