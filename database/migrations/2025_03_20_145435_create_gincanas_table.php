@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('gincanas', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
+            $table->enum('estado', ['abierta', 'ocupada']);
             $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('cascade');
             $table->timestamps();
         });
