@@ -15,10 +15,13 @@ class Usuario extends Authenticatable
     // Los atributos que se pueden asignar en masa
     protected $fillable = [
         'nombre',
+        'apellido',   // Asegúrate de que 'apellido' esté también en fillable si es necesario
         'email',
         'password',
-        'id_rol',  // Si tu modelo tiene este campo, asegúrate de incluirlo
+        'username',   // Agregar 'username' aquí
+        'id_rol',
     ];
+    
 
     // Los atributos que deberían ser ocultados para los arrays
     protected $hidden = [

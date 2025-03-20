@@ -25,10 +25,16 @@
                     @csrf
 
                     <!-- Nombre input -->
-                    <input type="text" name="name" placeholder="Nombre Completo" required>
+                    <input type="text" name="nombre" placeholder="Nombre Completo" required>
+
+                    <!-- Apellido input -->
+                    <input type="text" name="apellido" placeholder="Apellido" required> <!-- Nuevo campo para apellido -->
 
                     <!-- Email input -->
                     <input type="email" name="email" placeholder="Correo Electrónico" required>
+
+                    <!-- Username input -->
+                    <input type="text" name="username" placeholder="Nombre de Usuario" required>
 
                     <!-- Password input -->
                     <input type="password" name="password" placeholder="Contraseña" required>

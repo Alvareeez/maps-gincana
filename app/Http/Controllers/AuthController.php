@@ -40,29 +40,34 @@ class AuthController extends Controller
         // Validación de datos
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:usuarios',
+            'username' => 'required|string|max:255|unique:usuarios',
             'password' => 'required|string|confirmed|min:8',
         ]);
-
+    
         if ($validator->fails()) {
             return redirect()->route('register')
                 ->withErrors($validator)
                 ->withInput();
         }
-
-        // Crear el usuario
+    
+        // Crear el usuario y asignarle el rol con id_rol = 2
         $user = Usuario::create([
             'nombre' => $request->nombre,
+            'apellido' => $request->apellido,
             'email' => $request->email,
+            'username' => $request->username,
             'password' => Hash::make($request->password),
+            'id_rol' => 2,  // Asignar el rol con id = 2
         ]);
 
         // Iniciar sesión automáticamente después del registro
         Auth::login($user);
-
+    
         return redirect('/home');
     }
-
+    
     // Maneja el logout del usuario
     public function logout()
     {
