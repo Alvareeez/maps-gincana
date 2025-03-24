@@ -1,124 +1,187 @@
-/* Reset some default styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Body styles */
+/* Fuente y configuración base */
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #1e1e1e;
-    color: white;
+    background: linear-gradient(135deg, #000000, #ffcc00);
+    color: yellow;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
+    overflow: hidden;
 }
 
-/* Main container for the register page */
+/* Contenedor principal */
 .container {
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
     width: 100%;
-    height: 100%;
 }
 
-/* Register container */
 .register-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: row;
-    width: 90%;
-    max-width: 1000px;
-    background-color: #222;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Logo styling */
-.logo img {
-    width: 200px;
-    height: auto;
-    margin-right: 30px;
-}
-
-/* Register form container */
-.register-form {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 400px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(255, 204, 0, 0.6);
+    padding: 30px;
+    width: 350px;
+    max-width: 90%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Header for register form */
-.register-form h1 {
-    color: #f7b500;
-    font-size: 2rem;
-    font-weight: 600;
-    margin-bottom: 30px;
+/* Logo */
+.logo img {
+    width: 100px;
+    margin-bottom: 20px;
+    animation: fadeIn 1.5s ease-out; /* Aparece lentamente */
 }
 
-/* Input field styles */
-.register-form input {
+/* Formulario de registro */
+.register-form {
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    opacity: 0;
+    animation: fadeInUp 1.5s ease-out forwards; /* Aparece con deslizamiento */
+}
+
+/* Inputs */
+input {
+    width: 80%; /* Los inputs son más cortos */
     padding: 12px;
     margin: 10px 0;
-    border: 2px solid #444;
-    border-radius: 5px;
-    background-color: #333;
-    color: white;
-    font-size: 1rem;
-    font-family: 'Poppins', sans-serif;
-    transition: all 0.3s ease-in-out;
-}
-
-.register-form input:focus {
-    border-color: #f7b500;
-    background-color: #444;
+    border: 2px solid #ffcc00;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: yellow;
+    font-size: 16px;
     outline: none;
+    transition: 0.3s ease-in-out;
+    opacity: 0;
+    transform: translateX(-100%); /* Comienza fuera de la pantalla */
+    animation: slideIn 1.5s ease-out forwards; /* Animación de deslizamiento */
 }
 
-/* Submit button styles */
-.register-form button {
-    width: 100%;
+input:nth-child(1) {
+    animation-delay: 0.3s; /* Retraso para el primer input */
+}
+
+input:nth-child(2) {
+    animation-delay: 0.6s; /* Retraso para el segundo input */
+}
+
+input:nth-child(3) {
+    animation-delay: 0.9s; /* Retraso para el tercer input */
+}
+
+input:nth-child(4) {
+    animation-delay: 1.2s; /* Retraso para el cuarto input */
+}
+
+input:nth-child(5) {
+    animation-delay: 1.5s; /* Retraso para el quinto input */
+}
+
+input:nth-child(6) {
+    animation-delay: 1.8s; /* Retraso para el sexto input */
+}
+
+/* Estilos del placeholder */
+input::placeholder {
+    color: yellow;
+    font-size: 14px;
+}
+
+/* Efecto de foco en los inputs */
+input:focus {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Botón */
+button {
+    width: 80%; /* Cambiado a un 80% para el botón */
     padding: 12px;
-    background-color: #f7b500;
-    color: #222;
-    font-size: 1.2rem;
+    margin-top: 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    background: #ffcc00;
+    color: black;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    font-family: 'Poppins', sans-serif;
+    transition: 0.3s ease-in-out;
+    opacity: 0;
+    transform: translateX(-100%); /* Comienza fuera de la pantalla */
+    animation: slideIn 1.5s ease-out forwards;
+    animation-delay: 2s; /* Retraso para el botón */
 }
 
-.register-form button:hover {
-    background-color: #f7a700;
+/* Botón hover */
+button:hover {
+    background: #e6b800;
 }
 
-/* Responsiveness for mobile */
+/* Animaciones */
+/* Animación de deslizamiento */
+@keyframes slideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-100%); /* Empieza fuera de la pantalla a la izquierda */
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0); /* Llega a su posición original */
+    }
+}
+
+/* Animación de aparición del formulario */
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px); /* Empieza desde abajo */
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0); /* Llega a su posición original */
+    }
+}
+
+/* Animación de aparición del logo */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px); /* Empieza desde arriba */
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0); /* Llega a su posición original */
+    }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .register-container {
-        flex-direction: column;
-        padding: 20px 10px;
+        width: 90%;
+        padding: 20px;
     }
 
     .logo img {
-        width: 150px;
-        margin-bottom: 20px;
+        width: 100px;
     }
 
     .register-form h1 {
-        font-size: 1.6rem;
+        font-size: 24px;
     }
 
-    .register-form button {
-        font-size: 1.1rem;
+    input, button {
+        font-size: 16px;
+        padding: 12px;
+        width: 80%;
     }
 }
