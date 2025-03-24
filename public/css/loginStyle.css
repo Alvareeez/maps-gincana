@@ -7,8 +7,8 @@
 
 /* Body styles */
 body {
-    font-family: 'Poppins', sans-serif; /* Cambié la fuente aquí */
-    background-color: #1e1e1e;
+    font-family: 'Poppins', sans-serif;
+    background-color: #1e1e1e !important;
     color: white;
     display: flex;
     justify-content: center;
@@ -18,7 +18,7 @@ body {
 }
 
 /* Main container for the login page */
-.login-container {
+/* .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -28,29 +28,33 @@ body {
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+} */
 
 /* Logo styling */
 .logo img {
-    width: 200px;
+    width: 50%;
     height: auto;
-    margin-right: 30px;
+    justify-content: center;
+    display: block;
+    margin: 0 auto;
+    /* margin-right: 30px; */
 }
 
 /* Login form container */
 .login-form {
-    display: flex;
+    /* display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 400px;
+    max-width: 400px; */
 }
 
 /* Header for login form */
 .login-form h1 {
     color: #f7b500;
     font-size: 2rem;
-    font-weight: 600; /* Puse un peso de fuente más alto para darle más presencia */
+    font-weight: 600;
+    /* Puse un peso de fuente más alto para darle más presencia */
     margin-bottom: 30px;
 }
 
@@ -64,7 +68,8 @@ body {
     background-color: #333;
     color: white;
     font-size: 1rem;
-    font-family: 'Poppins', sans-serif; /* Usé la misma fuente para mantener la coherencia */
+    font-family: 'Poppins', sans-serif;
+    /* Usé la misma fuente para mantener la coherencia */
     transition: all 0.3s ease-in-out;
 }
 

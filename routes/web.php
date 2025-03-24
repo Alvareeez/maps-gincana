@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LugarDestacadoController;
+use App\Http\Controllers\TipoMarcadorController;
 
 
 // Ruta para mostrar el formulario de login
@@ -21,12 +22,14 @@ Route::get('register', [AuthController::class, 'showRegisterForm'])->name('regis
 Route::post('register', [AuthController::class, 'register']);
 
 // Página principal después de iniciar sesión (con middleware de autenticación)
-Route::get('/home', function () {
+Route::get('/', function () {
     return view('mapa');
-})->name('mapa')->middleware('auth');
+});
 
 // Rutas para manejar los lugares destacados
 Route::get('/lugares-destacados', [LugarDestacadoController::class, 'index']); // Obtener todos los lugares
 Route::post('/lugares-destacados', [LugarDestacadoController::class, 'store']); // Crear un lugar
 Route::put('/lugares-destacados/{id}', [LugarDestacadoController::class, 'update']); // Actualizar un lugar
 Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']); // Eliminar un lugar
+Route::get('/tipo-marcadores', [TipoMarcadorController::class, 'index']);
+Route::get('/buscar-lugares', [LugarDestacadoController::class, 'buscar']);

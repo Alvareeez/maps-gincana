@@ -29,7 +29,6 @@ function cargarLugaresDestacados() {
         .catch(error => console.error('Error al cargar los lugares destacados:', error));
 }
 
-// Función para guardar un lugar destacado en la base de datos
 function guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador) {
     fetch('/lugares-destacados', {
         method: 'POST',
@@ -74,28 +73,41 @@ function eliminarLugarDestacado(id) {
         .catch(error => console.error('Error al eliminar el lugar destacado:', error));
 }
 
+// Función para cargar los tipos de marcadores desde la base de datos
+function cargarTiposMarcadores() {
+    return fetch('/tipo-marcadores')
+        .then(response => response.json())
+        .then(tipos => {
+            // Generar las opciones del select
+            return tipos.map(tipo => `<option value="${tipo.id}">${tipo.nombre}</option>`).join('');
+        })
+        .catch(error => {
+            console.error('Error al cargar los tipos de marcadores:', error);
+            return '<option value="">Error al cargar</option>'; // Mostrar un mensaje de error en el select
+        });
+}
+
 // Habilitar la funcionalidad de añadir marcadores manualmente
-map.on('click', function (e) {
+map.on('click', async function (e) {
     var latlng = e.latlng;
+
+    // Cargar los tipos de marcadores antes de mostrar el modal
+    const opcionesTipoMarcador = await cargarTiposMarcadores();
 
     // Mostrar un modal de SweetAlert2 para ingresar los datos del lugar
     Swal.fire({
         title: 'Crear un nuevo lugar',
         html: `
-        <div class="my-3">
-            <input type="text" id="nombre" class="form-control my-3" placeholder="Nombre">
-            <input type="text" id="descripcion" class="form-control my-3" placeholder="Descripción">
-            <input type="text" id="direccion" class="form-control my-3" placeholder="Dirección">
-            <select type="text" id="tipoMarcador" class="form-control my-3" value="default">
-                <option selected disabled value="default">Default</option>
-                    @foreach($tipoMarcadores as $tipo)
-                        <option value="${{ $tiponombre }}"</option>
-                    @endforeach
-            </select>
-            <input type="number" id="latitud" class="form-control my-3" value="${latlng.lat}">
-            <input type="number" id="longitud" class="form-control my-3" value="${latlng.lng}">
-
-        </div>
+            <div class="my-3">
+                <input type="text" id="nombre" class="form-control my-3" placeholder="Nombre">
+                <input type="text" id="descripcion" class="form-control my-3" placeholder="Descripción">
+                <input type="text" id="direccion" class="form-control my-3" placeholder="Dirección">
+                <select id="tipoMarcador" class="form-control my-3">
+                    ${opcionesTipoMarcador} <!-- Opciones generadas dinámicamente -->
+                </select>
+                <input type="number" id="latitud" class="form-control my-3" value="${latlng.lat}" readonly>
+                <input type="number" id="longitud" class="form-control my-3" value="${latlng.lng}" readonly>
+            </div>
         `,
         confirmButtonText: 'Guardar',
         showCancelButton: true,
@@ -105,25 +117,75 @@ map.on('click', function (e) {
             const nombre = document.getElementById('nombre').value;
             const descripcion = document.getElementById('descripcion').value;
             const direccion = document.getElementById('direccion').value;
+            const tipoMarcador = document.getElementById('tipoMarcador').value;
             const latitud = document.getElementById('latitud').value;
             const longitud = document.getElementById('longitud').value;
-            const tipoMarcador = document.getElementById('tipoMarcador').value;
 
-            if (!nombre || !descripcion || !direccion || !latitud || !longitud || !tipoMarcador) {
+            if (!nombre || !descripcion || !direccion || !tipoMarcador) {
                 Swal.showValidationMessage('Por favor, completa todos los campos');
                 return false;
             }
 
-            return { nombre, descripcion, direccion, latitud, longitud, tipoMarcador };
+            return { nombre, descripcion, direccion, tipoMarcador, latitud, longitud };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            const { nombre, descripcion, direccion, latitud, longitud, tipoMarcador } = result.value;
+            const { nombre, descripcion, direccion, tipoMarcador, latitud, longitud } = result.value;
 
             // Guardar el lugar en la base de datos
             guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador);
         }
     });
+});
+
+// Lista para almacenar los lugares destacados
+var lugaresDestacados = [];
+
+// Función para buscar lugares destacados
+function buscarLugar(query) {
+    fetch(`/buscar-lugares?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(lugares => {
+            if (lugares.length > 0) {
+                // Limpiar los marcadores existentes
+                lugaresDestacados.forEach(lugar => {
+                    if (lugar.marker) {
+                        map.removeLayer(lugar.marker);
+                    }
+                });
+
+                // Añadir los resultados al mapa
+                lugares.forEach(lugar => {
+                    var marker = L.marker([lugar.latitud, lugar.longitud]).addTo(map)
+                        .bindPopup(`<b>${lugar.nombre}</b><br>${lugar.descripcion}<br>Dirección: ${lugar.direccion}`)
+                        .openPopup();
+
+                    // Centrar el mapa en el primer resultado
+                    map.setView([lugar.latitud, lugar.longitud], 15);
+
+                    // Guardar el marcador en la lista
+                    lugaresDestacados.push({
+                        id: lugar.id,
+                        nombre: lugar.nombre,
+                        direccion: lugar.direccion,
+                        latitud: lugar.latitud,
+                        longitud: lugar.longitud,
+                        marker: marker
+                    });
+                });
+            } else {
+                alert('No se encontraron lugares con esa búsqueda.');
+            }
+        })
+        .catch(error => console.error('Error al buscar lugares:', error));
+}
+
+// Evento para manejar el buscador
+document.getElementById('buscador').addEventListener('input', function (e) {
+    const query = e.target.value;
+    if (query.length > 2) { // Buscar solo si hay más de 2 caracteres
+        buscarLugar(query);
+    }
 });
 
 // Cargar los lugares destacados al iniciar el mapa

@@ -22,6 +22,14 @@
 </head>
 
 <body>
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12">
+                <input type="text" id="buscador" class="form-control"
+                    placeholder="Buscar lugar por nombre o dirección">
+            </div>
+        </div>
+    </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
