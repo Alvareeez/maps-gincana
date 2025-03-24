@@ -43,6 +43,9 @@ Route::middleware(['auth'])->group(function () {
     // Ruta para ver el mapa (requiere estar logueado)
     Route::get('/mapa', [MapaController::class, 'index'])->name('mapa');
 
+    // ----------------------------------------
+    // -------------- CRUDS ADMIN -------------
+    // ----------------------------------------
     // Rutas para administrador (requiere ser administrador, se verfica en AdminController)
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
@@ -51,7 +54,12 @@ Route::middleware(['auth'])->group(function () {
     // Ruta para almacenar (añadir) un usuario
     Route::post('/admin/usuario', [AdminController::class, 'store'])->name('usuario.store');
 
+    // Actualizar usuarios
     Route::put('/admin/usuario/{id}', [AdminController::class, 'update']);
+
+    // Eliminar usuarios
+    Route::delete('/admin/usuario/{id}', [AdminController::class, 'destroy'])->name('admin.usuario.destroy');
+
 
 
 

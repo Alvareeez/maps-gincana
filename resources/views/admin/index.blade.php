@@ -55,7 +55,7 @@
                     <td>
                         <button class="btn-edit" data-id="{{ $user->id }}" data-username="{{ $user->username }}" data-nombre="{{ $user->nombre }}" data-apellido="{{ $user->apellido }}" data-email="{{ $user->email }}" data-idrol="{{ $user->id_rol }}">Editar</button>
                         <button class="btn-delete" data-id="{{ $user->id }}">Eliminar</button>
-                    </td>
+                        </td>
                 </tr>
             @endforeach
         </tbody>
@@ -145,6 +145,7 @@
     <!-- Incluir los archivos JS -->
     <script src="{{ asset('js/editUser.js') }}"></script>
     <script src="{{ asset('js/addUser.js') }}"></script>
+    <script src="{{ asset('js/deleteUser.js') }}"></script>
 
 </body>
 </html>
