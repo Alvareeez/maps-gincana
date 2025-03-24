@@ -11,9 +11,9 @@ return new class extends Migration {
             $table->id();
             $table->string('nombre')->nullable;
             $table->enum('estado', ['abierta', 'ocupada']);
-            $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('set null');
             $table->integer('cantidad_jugadores');
             $table->integer('cantidad_grupos');
+            $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('cascade');
             $table->timestamps();
         });
     }
