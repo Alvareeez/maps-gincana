@@ -12,8 +12,8 @@ return new class extends Migration {
             $table->string('nombre');
             $table->text('descripcion');
             $table->string('direccion');
-            $table->decimal('latitud', 8, 2);
-            $table->decimal('longitud', 8, 2);
+            $table->decimal('latitud', 12, 12);
+            $table->decimal('longitud', 12, 12);
             $table->string('tipoMarcador');
             $table->timestamps();
         });
