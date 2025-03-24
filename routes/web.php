@@ -2,10 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MapaController;
+use App\Http\Controllers\AdminController;
+
 
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
 
 // Ruta para mostrar el formulario de login
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -26,3 +30,8 @@ Route::post('register', [AuthController::class, 'register']);
 Route::get('/home', function () {
     return view('home');
 })->name('home')->middleware('auth');
+
+Route::get('/mapa', [MapaController::class, 'index'])->name('mapa')->middleware('auth');
+
+Route::get('/admin', [AdminController::class, 'index'])->name('admin.index')->middleware('auth', 'id_rol:1');
+
