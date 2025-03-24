@@ -46,12 +46,6 @@ class Usuario extends Authenticatable
         return $this->hasMany(Jugador::class, 'id_usuario');
     }
 
-    // Relación uno a muchos con LugarPersonalizado
-    public function lugaresPersonalizados()
-    {
-        return $this->hasMany(LugarPersonalizado::class, 'id_usuario');
-    }
-
     // Relación uno a muchos con Gincana
     public function gincanas()
     {
@@ -59,8 +53,13 @@ class Usuario extends Authenticatable
     }
 
     public function favoritos()
-{
-    return $this->hasMany(Favorito::class, 'usuario_id');
-}
+    {
+        return $this->hasMany(Favorito::class, 'usuario_id');
+    }
+
+    public function listas()
+    {
+        return $this->hasMany(Lista::class, 'id_usuario');
+    }
 
 }

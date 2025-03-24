@@ -12,16 +12,14 @@ class Favorito extends Model
     protected $table = 'favoritos';
 
     protected $fillable = [
-        'usuario_id',
+        'lista_id',
         'lugar_destacado_id',
         'tipoMarcador',
     ];
     
-
-    // Relación con Usuario
-    public function usuario()
+    public function lista()
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(Lista::class, 'id_lista');
     }
 
     // Relación con LugarDestacado
