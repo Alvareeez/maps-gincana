@@ -12,7 +12,7 @@ class Favorito extends Model
     protected $table = 'favoritos';
 
     protected $fillable = [
-        'lista_id',
+        'id_lista',
         'lugar_destacado_id',
         'tipoMarcador',
     ];
