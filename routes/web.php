@@ -3,6 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
+Route::get('/', function () {
+    return view('home');
+})->name('home');
+
 // Ruta para mostrar el formulario de login
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 
