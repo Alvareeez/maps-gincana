@@ -1,30 +1,54 @@
-/* Fondo con animación de degradado */
+/* Fondo con animación */
 @keyframes backgroundAnimation {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 .animated-bg {
-    background: linear-gradient(270deg, #667eea, #764ba2, #6b8dd6, #8e37d7);
+    background: linear-gradient(270deg, #000, #222, #444, #000);
     background-size: 400% 400%;
     animation: backgroundAnimation 10s ease infinite;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
 }
 
-/* Estilos del título */
+/* Animaciones de fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Aplica fade-in a los elementos con retraso */
+.logo, .title, .subtitle, .buttons, .fade-image {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+}
+
+/* Logo */
+.logo {
+    width: 150px; /* Ajusta según necesites */
+    margin-bottom: 20px;
+}
+
+/* Título */
 .title {
     font-size: 3rem;
     font-weight: bold;
-    margin-bottom: 1rem;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
+    color: yellow;
+    text-shadow: 2px 2px 10px rgba(255, 255, 0, 0.7);
 }
 
-/* Estilos del subtítulo */
+/* Subtítulo */
 .subtitle {
     font-size: 1.2rem;
+    color: #bbb;
     margin-bottom: 1.5rem;
-    opacity: 0;
-    transition: opacity 1s ease-in-out 0.5s;
 }
 
 /* Botones */
@@ -34,28 +58,40 @@
     justify-content: center;
 }
 
+/* Botón de registro */
 .btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 1.2rem;
     font-weight: bold;
-    color: white;
     border-radius: 8px;
     text-decoration: none;
-    transition: transform 0.3s, background 0.3s;
+    transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
 }
 
 .btn-register {
-    background-color: #4299e1;
+    background-color: yellow;
+    color: black;
 }
 .btn-register:hover {
-    background-color: #3182ce;
+    background-color: #ffea00;
     transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
 }
 
 .btn-login {
-    background-color: #48bb78;
+    background-color: black;
+    color: yellow;
+    border: 2px solid yellow;
 }
 .btn-login:hover {
-    background-color: #38a169;
+    background-color: #222;
     transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+/* Imágenes */
+.fade-image {
+    width: 200px; /* Ajusta el tamaño de las imágenes */
+    border-radius: 10px;
+    margin-top: 20px;
 }

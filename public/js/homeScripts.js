@@ -1,7 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Animaciones de entrada para el título y subtítulo
-    setTimeout(() => {
-        document.querySelector(".title").style.opacity = "1";
-        document.querySelector(".subtitle").style.opacity = "1";
-    }, 500);
+    // Lista de elementos que queremos mostrar con efecto de fade-in
+    const elements = document.querySelectorAll(".logo, .title, .subtitle, .buttons, .fade-image");
+    
+    let delay = 200; // Tiempo inicial de delay en milisegundos
+    elements.forEach((element) => {
+        setTimeout(() => {
+            element.style.opacity = "1";
+            element.style.transform = "translateY(0)";
+        }, delay);
+        delay += 300; // Aumenta el delay para que aparezcan uno a uno
+    });
 });
