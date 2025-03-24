@@ -4,37 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ asset('css/adminStyle.css') }}">
     <title>Administrar Usuarios</title>
-    <!-- Estilos básicos para el modal -->
-    <style>
-        /* Estilo básico para el modal */
-        #modal, #modal-edit {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 400px;
-        }
-        button {
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
 
     <h1>Lista de Usuarios</h1>
-
-    <!-- Mostrar los usuarios -->
     <table>
         <thead>
             <tr>
@@ -146,8 +121,7 @@
             <!-- CRUDS DE PRUEBAS -->
     <!--   ------------------------------ -->
 
-    <h2>Lista de Pruebas</h2>
-
+    <h1>Lista de Pruebas</h1>
     <table>
         <thead>
             <tr>
@@ -162,6 +136,7 @@
                     <td>{{ $prueba->pregunta }}</td>
                     <td>{{ $prueba->respuesta }}</td>
                     <td>
+                        <!-- Botón para editar una prueba -->
                         <button class="btn-edit-prueba" data-id="{{ $prueba->id }}" data-pregunta="{{ $prueba->pregunta }}" data-respuesta="{{ $prueba->respuesta }}">Editar</button>
                         <button class="btn-delete-prueba" data-id="{{ $prueba->id }}">Eliminar</button>
                     </td>
@@ -181,7 +156,6 @@
             <form id="prueba-form">
                 @csrf
                 <input type="hidden" id="prueba-id">
-
                 <label for="pregunta">Pregunta</label>
                 <input type="text" id="pregunta" name="pregunta" required>
 
@@ -197,11 +171,13 @@
 
 
 
+
+
     <!-- Incluir los archivos JS -->
     <script src="{{ asset('js/editUser.js') }}"></script>
     <script src="{{ asset('js/addUser.js') }}"></script>
     <script src="{{ asset('js/deleteUser.js') }}"></script>
-    <script src="{{ asset('js/managePruebas.js') }}"></script>
+    <script src="{{ asset('js/managePrueba.js') }}"></script>
 
 </body>
 </html>

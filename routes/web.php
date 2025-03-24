@@ -68,7 +68,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pruebas', [PruebaController::class, 'store'])->name('pruebas.store');
     
     // Actualizar prueba
-    Route::put('/pruebas/{id}', [PruebaController::class, 'update'])->name('pruebas.update');
+    Route::put('/pruebas/{id}', [PruebaController::class, 'update']);
 
     // Borrar prueba
     Route::delete('/pruebas/{id}', [PruebaController::class, 'destroy'])->name('pruebas.destroy');

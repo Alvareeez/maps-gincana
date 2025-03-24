@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Prueba extends Model
 {
-    protected $table = 'pruebas';  // Nombre de la tabla
+    protected $table = 'pruebas'; 
+
+    protected $fillable = ['pregunta', 'respuesta'];
 
     public function niveles()
     {
