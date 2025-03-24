@@ -9,9 +9,11 @@ return new class extends Migration {
     {
         Schema::create('gincanas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
+            $table->string('nombre')->nullable;
             $table->enum('estado', ['abierta', 'ocupada']);
-            $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('set null');
+            $table->integer('cantidad_jugadores');
+            $table->integer('cantidad_grupos');
             $table->timestamps();
         });
     }
@@ -21,4 +23,3 @@ return new class extends Migration {
         Schema::dropIfExists('gincanas');
     }
 };
-

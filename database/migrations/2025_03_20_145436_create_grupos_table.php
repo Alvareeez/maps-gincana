@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('grupos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_gincana')->constrained('gincanas')->onDelete('cascade');
-            $table->string('nombre');
+            $table->string('nombre')->nullable();
             $table->integer('nivel');
             $table->timestamps();
         });
