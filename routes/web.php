@@ -46,6 +46,16 @@ Route::middleware(['auth'])->group(function () {
     // Rutas para administrador (requiere ser administrador, se verfica en AdminController)
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index'); // Página principal del admin
+
+    // Ruta para almacenar (añadir) un usuario
+Route::post('/admin/usuario', [AdminController::class, 'store'])->name('usuario.store');
+
+    Route::post('/admin/store', [AdminController::class, 'store'])->name('admin.store'); // Añadir usuario
+    Route::put('/admin/update/{id}', [AdminController::class, 'update'])->name('admin.update'); // Editar usuario
+    Route::delete('/admin/delete/{id}', [AdminController::class, 'destroy'])->name('admin.destroy'); // Eliminar usuario
+
+
 
 });
 
