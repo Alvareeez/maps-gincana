@@ -12,8 +12,8 @@ return new class extends Migration {
             $table->string('nombre');
             $table->text('descripcion');
             $table->string('direccion');
-            $table->decimal('latitud', 8, 2);
-            $table->decimal('longitud', 8, 2);
+            $table->decimal('latitud', 14, 8);
+            $table->decimal('longitud', 14, 8);
             // RELACION MARCADOR
             $table->foreignId('tipoMarcador')->constrained('tipo_marcador')->onDelete('cascade');
             $table->timestamps();

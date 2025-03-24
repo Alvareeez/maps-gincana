@@ -6,6 +6,10 @@ use App\Http\Controllers\LugarDestacadoController;
 use App\Http\Controllers\TipoMarcadorController;
 
 
+Route::get('/', function () {
+    return view('home');
+})->name('home');
+
 // Ruta para mostrar el formulario de login
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 
@@ -22,7 +26,7 @@ Route::get('register', [AuthController::class, 'showRegisterForm'])->name('regis
 Route::post('register', [AuthController::class, 'register']);
 
 // Página principal después de iniciar sesión (con middleware de autenticación)
-Route::get('/', function () {
+Route::get('/mapa', function () {
     return view('mapa');
 });
 
@@ -33,3 +37,4 @@ Route::put('/lugares-destacados/{id}', [LugarDestacadoController::class, 'update
 Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']); // Eliminar un lugar
 Route::get('/tipo-marcadores', [TipoMarcadorController::class, 'index']);
 Route::get('/buscar-lugares', [LugarDestacadoController::class, 'buscar']);
+Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']);

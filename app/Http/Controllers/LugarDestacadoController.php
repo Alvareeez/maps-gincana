@@ -70,6 +70,6 @@ class LugarDestacadoController extends Controller
         $lugar = LugarDestacado::findOrFail($id);
         $lugar->delete();
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Lugar destacado eliminado correctamente.']);
     }
 }
