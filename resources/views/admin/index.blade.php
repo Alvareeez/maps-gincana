@@ -142,10 +142,66 @@
         </div>
     </div>
 
+    <!--   ------------------------------ -->
+            <!-- CRUDS DE PRUEBAS -->
+    <!--   ------------------------------ -->
+
+    <h2>Lista de Pruebas</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Pregunta</th>
+                <th>Respuesta</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pruebas as $prueba)
+                <tr>
+                    <td>{{ $prueba->pregunta }}</td>
+                    <td>{{ $prueba->respuesta }}</td>
+                    <td>
+                        <button class="btn-edit-prueba" data-id="{{ $prueba->id }}" data-pregunta="{{ $prueba->pregunta }}" data-respuesta="{{ $prueba->respuesta }}">Editar</button>
+                        <button class="btn-delete-prueba" data-id="{{ $prueba->id }}">Eliminar</button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <!-- Botón para añadir una nueva prueba -->
+    <button id="btn-add-prueba">Añadir Prueba</button>
+
+    <!-- Modal para añadir una nueva prueba -->
+    <div id="modal-prueba" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-prueba">Añadir Prueba</h2>
+
+            <form id="prueba-form">
+                @csrf
+                <input type="hidden" id="prueba-id">
+
+                <label for="pregunta">Pregunta</label>
+                <input type="text" id="pregunta" name="pregunta" required>
+
+                <label for="respuesta">Respuesta</label>
+                <input type="text" id="respuesta" name="respuesta" required>
+
+                <button type="submit" id="save-prueba-btn">Guardar</button>
+            </form>
+
+            <button id="close-modal-prueba">Cerrar</button>
+        </div>
+    </div>
+
+
+
     <!-- Incluir los archivos JS -->
     <script src="{{ asset('js/editUser.js') }}"></script>
     <script src="{{ asset('js/addUser.js') }}"></script>
     <script src="{{ asset('js/deleteUser.js') }}"></script>
+    <script src="{{ asset('js/managePruebas.js') }}"></script>
 
 </body>
 </html>

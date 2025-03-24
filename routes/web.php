@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MapaController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PruebaController;
 use Illuminate\Support\Facades\Auth;
 
 // Rutas de acceso público (sin autenticación) ----------------------------------------------------------
@@ -49,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
     // Rutas para administrador (requiere ser administrador, se verfica en AdminController)
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
-    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index'); // Página principal del admin
+    // CRUDS USUARIOS 
 
     // Ruta para almacenar (añadir) un usuario
     Route::post('/admin/usuario', [AdminController::class, 'store'])->name('usuario.store');
@@ -60,6 +61,17 @@ Route::middleware(['auth'])->group(function () {
     // Eliminar usuarios
     Route::delete('/admin/usuario/{id}', [AdminController::class, 'destroy'])->name('admin.usuario.destroy');
 
+
+    // CRUDS PRUEBAS
+
+    // Crear prueba
+    Route::post('/pruebas', [PruebaController::class, 'store'])->name('pruebas.store');
+    
+    // Actualizar prueba
+    Route::put('/pruebas/{id}', [PruebaController::class, 'update'])->name('pruebas.update');
+
+    // Borrar prueba
+    Route::delete('/pruebas/{id}', [PruebaController::class, 'destroy'])->name('pruebas.destroy');
 
 
 

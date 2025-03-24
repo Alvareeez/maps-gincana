@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
-use App\Models\Role; // Asegúrate de tener el modelo Role si lo usas
+use App\Models\Prueba; 
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,8 @@ class AdminController extends Controller
             // Obtener todos los usuarios
             $users = Usuario::all();
             $roles = Role::all(); 
-            return view('admin.index', compact('users','roles')); 
+            $pruebas = Prueba::all();
+            return view('admin.index', compact('users','roles','pruebas')); 
         }
 
         // Si no es administrador, redirigir a la página principal con un mensaje de error
