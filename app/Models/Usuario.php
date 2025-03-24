@@ -57,4 +57,10 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(Gincana::class, 'id_ganador');
     }
+
+    public function favoritos()
+{
+    return $this->hasMany(Favorito::class, 'usuario_id');
+}
+
 }
