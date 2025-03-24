@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MapaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PruebaController;
+use App\Http\Controllers\LugarController;
 use Illuminate\Support\Facades\Auth;
 
 // Rutas de acceso público (sin autenticación) ----------------------------------------------------------
@@ -73,6 +74,17 @@ Route::middleware(['auth'])->group(function () {
     // Borrar prueba
     Route::delete('/pruebas/{id}', [PruebaController::class, 'destroy'])->name('pruebas.destroy');
 
+
+    // CRUDS LUGARES
+
+    // Crear lugar
+    Route::post('/lugares', [LugarController::class, 'store'])->name('lugares.store');
+
+    // Actualizar lugar
+    Route::put('/lugares/{id}', [LugarController::class, 'update'])->name('lugares.update');
+    
+    // Eliminar lugar
+    Route::delete('/lugares/{id}', [LugarController::class, 'destroy'])->name('lugares.destroy');
 
 
 });

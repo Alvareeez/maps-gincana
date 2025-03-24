@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Usuario;
 use App\Models\Prueba; 
 use App\Models\Role;
+use App\Models\Lugar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +20,8 @@ class AdminController extends Controller
             $users = Usuario::all();
             $roles = Role::all(); 
             $pruebas = Prueba::all();
-            return view('admin.index', compact('users','roles','pruebas')); 
+            $lugares = Lugar::all();
+            return view('admin.index', compact('users','roles','pruebas','lugares')); 
         }
 
         // Si no es administrador, redirigir a la página principal con un mensaje de error

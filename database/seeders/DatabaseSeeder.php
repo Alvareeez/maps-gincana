@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Role;
 use App\Models\Usuario;
 use App\Models\Prueba;
+use App\Models\Lugar;
 use Illuminate\Database\Seeder;
 
 
@@ -20,5 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->call(UsuariosSeeder::class);
 
         $this->call(PruebasSeeder::class);
+
+        $this->call(LugaresSeeder::class);
+
     }
 }
