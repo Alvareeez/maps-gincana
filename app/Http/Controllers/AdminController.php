@@ -50,36 +50,43 @@ class AdminController extends Controller
         // Devolver la respuesta en formato JSON
         return response()->json(['usuario' => $usuario]);
     }
-
-    // Método para actualizar un usuario
     public function update(Request $request, $id)
     {
-        // Buscar al usuario por su ID
-        $usuario = Usuario::findOrFail($id);
-
-        // Validación de los datos
+        // Validación de los datos (ajusta según tus necesidades)
         $validated = $request->validate([
-            'username' => 'required|unique:usuarios,username,' . $usuario->id,
-            'nombre' => 'required',
-            'apellido' => 'required',
-            'email' => 'required|email|unique:usuarios,email,' . $usuario->id,
-            'password' => 'nullable|min:6',
-            'id_rol' => 'required|exists:roles,id',
+            'username' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email,' . $id,
+            'password' => 'nullable|string|min:8',
+            'id_rol' => 'required|integer',
         ]);
-
-        // Actualizar el usuario
-        $usuario->update([
-            'username' => $validated['username'],
-            'nombre' => $validated['nombre'],
-            'apellido' => $validated['apellido'],
-            'email' => $validated['email'],
-            'password' => $validated['password'] ? bcrypt($validated['password']) : $usuario->password,
-            'id_rol' => $validated['id_rol'],
-        ]);
-
-        // Devolver la respuesta en formato JSON
-        return response()->json(['usuario' => $usuario]);
+    
+        // Buscar el usuario
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+    
+        // Actualizar los campos del usuario
+        $usuario->username = $request->input('username');
+        $usuario->nombre = $request->input('nombre');
+        $usuario->apellido = $request->input('apellido');
+        $usuario->email = $request->input('email');
+    
+        // Solo actualizar la contraseña si se proporciona
+        if ($request->filled('password')) {
+            $usuario->password = bcrypt($request->input('password'));
+        }
+    
+        $usuario->id_rol = $request->input('id_rol');
+    
+        // Guardar el usuario actualizado
+        $usuario->save();
+    
+        return response()->json(['success' => 'Usuario actualizado correctamente']);
     }
+        
 
     // Método para eliminar un usuario
     public function destroy($id)

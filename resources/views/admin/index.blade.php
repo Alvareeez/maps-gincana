@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Administrar Usuarios</title>
-    <!-- Incluir el archivo de estilo para el modal si es necesario -->
+    <!-- Estilos básicos para el modal -->
     <style>
         /* Estilo básico para el modal */
-        #modal {
+        #modal, #modal-edit {
             position: fixed;
             top: 0;
             left: 0;
@@ -45,14 +46,14 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($users as $user)  <!-- Aquí 'users' es el nombre de la variable pasada desde el controlador -->
+            @foreach($users as $user)
                 <tr>
                     <td>{{ $user->username }}</td>
                     <td>{{ $user->nombre }}</td>
                     <td>{{ $user->apellido }}</td>
                     <td>{{ $user->email }}</td>
                     <td>
-                        <button class="btn-edit" data-id="{{ $user->id }}">Editar</button>
+                        <button class="btn-edit" data-id="{{ $user->id }}" data-username="{{ $user->username }}" data-nombre="{{ $user->nombre }}" data-apellido="{{ $user->apellido }}" data-email="{{ $user->email }}" data-idrol="{{ $user->id_rol }}">Editar</button>
                         <button class="btn-delete" data-id="{{ $user->id }}">Eliminar</button>
                     </td>
                 </tr>
@@ -70,7 +71,7 @@
 
             <!-- Formulario para añadir un nuevo usuario -->
             <form id="user-form">
-                @csrf <!-- Token CSRF para la seguridad de la solicitud -->
+                @csrf
                 <input type="hidden" id="user-id">
 
                 <label for="username">Username</label>
@@ -102,7 +103,47 @@
         </div>
     </div>
 
-    <!-- Incluir el archivo JS para manejar el AJAX -->
+    <!-- Modal para editar un usuario -->
+    <div id="modal-edit">
+        <div class="modal-content">
+            <h2 id="modal-title-edit">Editar Usuario</h2>
+
+            <!-- Formulario para editar un usuario -->
+            <form id="edit-form">
+                @csrf
+                <input type="hidden" id="edit-user-id">
+
+                <label for="edit-username">Username</label>
+                <input type="text" id="edit-username" name="username" required>
+
+                <label for="edit-nombre">Nombre</label>
+                <input type="text" id="edit-nombre" name="nombre" required>
+
+                <label for="edit-apellido">Apellido</label>
+                <input type="text" id="edit-apellido" name="apellido" required>
+
+                <label for="edit-email">Email</label>
+                <input type="email" id="edit-email" name="email" required>
+
+                <label for="edit-password">Contraseña (dejar en blanco si no se desea cambiar)</label>
+                <input type="password" id="edit-password" name="password">
+
+                <label for="edit-id_rol">Rol</label>
+                <select id="edit-id_rol" name="id_rol" required>
+                    @foreach($roles as $role)
+                        <option value="{{ $role->id }}">{{ $role->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" id="edit-btn">Actualizar</button>
+            </form>
+
+            <button id="close-modal-edit">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Incluir los archivos JS -->
+    <script src="{{ asset('js/editUser.js') }}"></script>
     <script src="{{ asset('js/addUser.js') }}"></script>
 
 </body>
