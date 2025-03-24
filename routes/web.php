@@ -4,12 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MapaController;
 use App\Http\Controllers\AdminController;
+use Illuminate\Support\Facades\Auth;
 
+// Rutas de acceso público (sin autenticación) ----------------------------------------------------------
 
+// Ruta para mostrar la página de inicio (home)
 Route::get('/', function () {
     return view('home');
 })->name('home');
-
 
 // Ruta para mostrar el formulario de login
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -26,12 +28,26 @@ Route::get('register', [AuthController::class, 'showRegisterForm'])->name('regis
 // Ruta para manejar el registro de usuarios
 Route::post('register', [AuthController::class, 'register']);
 
-// Página principal después de iniciar sesión (con middleware de autenticación)
-Route::get('/home', function () {
-    return view('home');
-})->name('home')->middleware('auth');
+// ------------------------------------------------------------------------------------------------------
 
-Route::get('/mapa', [MapaController::class, 'index'])->name('mapa')->middleware('auth');
+// Rutas protegidas por autenticación (requieren estar logueado) ----------------------------------------
 
-Route::get('/admin', [AdminController::class, 'index'])->name('admin.index')->middleware('auth', 'id_rol:1');
+// Middleware 'auth' garantiza que solo los usuarios logueados puedan acceder a estas rutas
+Route::middleware(['auth'])->group(function () {
+
+    // Página principal después de iniciar sesión
+    Route::get('/home', function () {
+        return view('home');
+    })->name('home');
+
+    // Ruta para ver el mapa (requiere estar logueado)
+    Route::get('/mapa', [MapaController::class, 'index'])->name('mapa');
+
+    // Rutas para administrador (requiere ser administrador)
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+
+
+    // Aquí podrías agregar más rutas para otros roles, por ejemplo, clientes, técnicos, etc.
+
+});
 
