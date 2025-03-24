@@ -43,11 +43,9 @@ Route::middleware(['auth'])->group(function () {
     // Ruta para ver el mapa (requiere estar logueado)
     Route::get('/mapa', [MapaController::class, 'index'])->name('mapa');
 
-    // Rutas para administrador (requiere ser administrador)
+    // Rutas para administrador (requiere ser administrador, se verfica en AdminController)
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
-
-    // Aquí podrías agregar más rutas para otros roles, por ejemplo, clientes, técnicos, etc.
 
 });
 
