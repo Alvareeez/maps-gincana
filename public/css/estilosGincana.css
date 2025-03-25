@@ -11,14 +11,14 @@ body {
 /* Botones de gincanas */
 #contenedorGincanas a {
     display: block;
-    background-color: rgb(255, 255, 255);
-    color: #FF9900;
+    background-color: rgba(255, 255, 255, 0.016);
+    color: yellow;
     font-size: 1.8rem;
     font-weight: bold;
     text-align: center;
     text-decoration: none;
     border-radius: 15px;
-    border: 3px solid #FF9900;
+    border: 3px solid yellow;
     padding: 1.5rem 0;
     margin: 0 auto;
     width: 100%;
@@ -102,12 +102,12 @@ header .back-button {
     display: inline-block;
     padding: 0.8rem 2rem;
     background-color: rgba(0, 0, 0, 0.5);
-    color: #FF9900;
+    color: yellow;
     font-size: 1.2rem;
     font-weight: bold;
     text-decoration: none;
     border-radius: 30px;
-    border: 2px solid #FF9900;
+    border: 2px solid yellow;
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
@@ -129,13 +129,40 @@ header .back-button:hover {
     }
 }
 
-/* Efecto sutil de actualización */
-.actualizando {
-    opacity: 0.8;
-    transition: opacity 0.3s;
+#contenedorGrupos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
 }
 
-/* Restaurar opacidad después de actualizar */
-#contenedorGincanas {
-    transition: opacity 0.5s;
+#contenedorGrupos .col-12 {
+    text-align: center;
+    color: #ecf0f1; /* Texto claro */
+}
+
+#contenedorGrupos .btn {
+    font-size: 1rem;
+    font-weight: bold;
+    color: yellow; /* Color del texto del botón */
+    background-color: transparent;
+    border: 2px solid yellow;
+    transition: all 0.3s ease;
+}
+
+#contenedorGrupos .btn:hover {
+    background-color: #ff9900;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+#contenedorGrupos .row {
+    width: 100%;
+    margin: 0;
+}
+
+#contenedorGrupos .col-12.col-md-6.col-lg-4 {
+    padding: 0.5rem;
 }

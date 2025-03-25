@@ -2,17 +2,17 @@
 
 @section('title', 'Unirse a grupo')
 
-{{-- @section('title', 'Issue ' . $data['issue']->id) --}}
-
 @section('headerTitle', 'Unirse a grupo')
 
+@section('volverAtras')
+<a href="{{ route('gincana.menu') }}" class="back-button">Volver atrás</a>
+@endsection
 
 @section('content')
-    <a href="{{ route('gincana.menu') }}">Volver atrás</a>
-    <h3 id="nombreGrupo"></h3>
-    <h1>Grupos Disponibles</h1>
-    <div id="contenedorGrupos">
-
+    <div class="container text-center mt-5">
+        <div id="contenedorGrupos" class="row justify-content-center">
+            <!-- Aquí se cargarán los grupos dinámicamente -->
+        </div>
     </div>
 @endsection
 

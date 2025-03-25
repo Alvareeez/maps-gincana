@@ -16,9 +16,10 @@
 <body>
     <header>
         <nav>
+        
         <!-- Botón "Volver atrás" -->
         <div class="back-button-container">
-            <a href="{{ route('home') }}" class="back-button">Volver atrás</a>
+            @yield('volverAtras') <!-- Aquí va tu botón dinámico -->
         </div>
         <!-- Título principal -->
         <div class="header-title">

@@ -5,6 +5,9 @@
 {{-- @section('title', 'Issue ' . $data['issue']->id) --}}
 
 @section('headerTitle', 'Escoge una gincana')
+@section('volverAtras')
+<a href="{{ route('home') }}" class="back-button">Volver atrás</a>
+@endsection
 
 @section('content')
     <div class="container text-center mt-5">
