@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
-use App\Models\Role; // Asegúrate de tener el modelo Role si lo usas
+use App\Models\Prueba; 
+use App\Models\Role;
+use App\Models\Lugar;
+use App\Models\Nivel;
+use App\Models\Gincana;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +22,12 @@ class AdminController extends Controller
             // Obtener todos los usuarios
             $users = Usuario::all();
             $roles = Role::all(); 
-            return view('admin.index', compact('users','roles')); 
+            $pruebas = Prueba::all();
+            $lugares = Lugar::all();
+            $niveles = Nivel::all();
+            $gincanas = Gincana::all();
+            $grupos = Grupo::all();
+            return view('admin.index', compact('users','roles','pruebas','lugares','niveles','gincanas','grupos')); 
         }
 
         // Si no es administrador, redirigir a la página principal con un mensaje de error

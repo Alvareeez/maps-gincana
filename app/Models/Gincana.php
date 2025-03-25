@@ -6,15 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Gincana extends Model
 {
-    protected $table = 'gincanas';  // Nombre de la tabla
+    protected $table = 'gincanas';
 
-    public function ganador()
+    protected $fillable = [
+        'nombre',
+        'estado',
+        'cantidad_jugadores',
+        'cantidad_grupos',
+        'id_ganador',
+    ];
+
+    // Relación con el grupo ganador
+    public function ganadorGrupo()
     {
-        return $this->belongsTo(Usuario::class, 'id_ganador');  // Relación de muchos a uno con Usuario
+        return $this->belongsTo(Grupo::class, 'id_ganador');
     }
 
+    // Relación con todos los grupos de la gincana
     public function grupos()
     {
-        return $this->hasMany(Grupo::class, 'id_gincana');  // Relación uno a muchos con Grupo
+        return $this->hasMany(Grupo::class, 'id_gincana');
     }
 }
