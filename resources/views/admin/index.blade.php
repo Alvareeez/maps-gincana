@@ -24,7 +24,9 @@
             </ul>
         </div>
     </nav>
-
+    
+    <div class="admin-container">
+    <div id="usuarios-section" class="content-section">
     <h1>Lista de Usuarios</h1>
     <table>
         <thead>
@@ -132,11 +134,13 @@
             <button id="close-modal-edit">X</button>
         </div>
     </div>
+    </div>
 
     <!--   ------------------------------ -->
             <!-- CRUDS DE PRUEBAS -->
     <!--   ------------------------------ -->
 
+    <div id="pruebas-section" class="content-section hidden">
     <h1>Lista de Pruebas</h1>
     <table>
         <thead>
@@ -184,11 +188,13 @@
             <button id="close-modal-prueba">X</button>
         </div>
     </div>
+    </div>
 
     <!--   ------------------------------ -->
             <!-- CRUDS DE LUGARES -->
     <!--   ------------------------------ -->
-
+    
+    <div id="lugares-section" class="content-section hidden">
     <h1>Lista de Lugares</h1>
     <table>
         <thead>
@@ -278,12 +284,15 @@
         <button id="close-modal-edit-lugar">X</button>
     </div>
 </div>
+</div>
+
 
 
     <!--   ------------------------------ -->
             <!-- CRUDS DE NIVELES -->
     <!--   ------------------------------ -->
 
+    <div id="niveles-section" class="content-section hidden">
     <h1>Lista de Niveles</h1>
 
     <!-- Tabla de niveles -->
@@ -406,14 +415,15 @@
             <button id="close-modal-edit-nivel">X</button>
         </div>
     </div>
+    </div>
 
 
     <!--   ------------------------------ -->
             <!-- CRUDS DE GINCANA -->
     <!--   ------------------------------ -->
 
+    <div id="gincanas-section" class="content-section hidden">
         <h1>Lista de Gincanas</h1>
-
     <table>
         <thead>
             <tr>
@@ -526,11 +536,13 @@
             <button id="close-modal-edit-gincana">X</button>
         </div>
     </div>
+    </div>
 
 
 
 
     <!-- Incluir los archivos JS -->
+    <script src="{{ asset('js/adminNavbar.js') }}"></script>
     <script src="{{ asset('js/editUser.js') }}"></script>
     <script src="{{ asset('js/addUser.js') }}"></script>
     <script src="{{ asset('js/deleteUser.js') }}"></script>
