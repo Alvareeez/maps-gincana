@@ -48,7 +48,7 @@
                 <a href="{{ route('login') }}" class="btn btn-login">Login</a>
             @else
                 <!-- Si está logueado -->
-                <a href="#" class="btn btn-map">MAPA</a>
+                <a href="{{ route('mapa') }}" class="btn btn-map">MAPA</a>
                 <a href="{{ route('gincana.menu') }}" class="btn btn-gincana">GINCANA</a>
 
                 @if(auth()->user()->id_rol == 1)

@@ -7,6 +7,8 @@ use App\Models\Usuario;
 use App\Models\Prueba;
 use App\Models\Lugar;
 use App\Models\Nivel;
+use App\Models\TipoMarcador;
+use App\Models\Gincana;
 use Illuminate\Database\Seeder;
 
 
@@ -29,6 +31,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call(NivelSeeder::class);
 
+        $this->call(TipoMarcadorSeeder::class);
 
     }
 }
+
+

@@ -10,6 +10,8 @@ use App\Http\Controllers\NivelController;
 use App\Http\Controllers\GincanaController;
 
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\LugarDestacadoController;
+use App\Http\Controllers\TipoMarcadorController;
 
 // Rutas de acceso público (sin autenticación) ----------------------------------------------------------
 
@@ -32,6 +34,22 @@ Route::get('register', [AuthController::class, 'showRegisterForm'])->name('regis
 
 // Ruta para manejar el registro de usuarios
 Route::post('register', [AuthController::class, 'register']);
+// Página principal después de iniciar sesión (con middleware de autenticación)
+Route::get('/mapa', function () {
+    return view('mapa');
+});
+Route::get('/etiquetas', function () {
+    return response()->json(\App\Models\Etiqueta::all());
+});
+// Rutas para manejar los lugares destacados
+Route::get('/lugares-destacados', [LugarDestacadoController::class, 'index']); // Obtener todos los lugares
+Route::post('/lugares-destacados', [LugarDestacadoController::class, 'store']); // Crear un lugar
+Route::put('/lugares-destacados/{id}', [LugarDestacadoController::class, 'update']); // Actualizar un lugar
+Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']); // Eliminar un lugar
+Route::get('/tipo-marcadores', [TipoMarcadorController::class, 'index']);
+Route::get('/buscar-lugares', [LugarDestacadoController::class, 'buscar']);
+Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']);
+Route::get('/lugares-destacados-con-relaciones', [LugarDestacadoController::class, 'indexWithRelations']);
 
 // ------------------------------------------------------------------------------------------------------
 
@@ -70,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Crear prueba
     Route::post('/pruebas', [PruebaController::class, 'store'])->name('pruebas.store');
-    
+
     // Actualizar prueba
     Route::put('/pruebas/{id}', [PruebaController::class, 'update']);
 
@@ -85,7 +103,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Actualizar lugar
     Route::put('/lugares/{id}', [LugarController::class, 'update'])->name('lugares.update');
-    
+
     // Eliminar lugar
     Route::delete('/lugares/{id}', [LugarController::class, 'destroy'])->name('lugares.destroy');
 
