@@ -177,6 +177,7 @@
     <table>
         <thead>
             <tr>
+                <th>Nombre</th>
                 <th>Pista</th>
                 <th>Latitud</th>
                 <th>Longitud</th>
@@ -186,17 +187,14 @@
         <tbody>
             @foreach($lugares as $lugar)
                 <tr>
+                    <td>{{ $lugar->nombre }}</td>
                     <td>{{ $lugar->pista }}</td>
                     <td>{{ $lugar->latitud }}</td>
                     <td>{{ $lugar->longitud }}</td>
                     <td>
                         <!-- Botón para editar un lugar -->
-                        <button class="btn-edit-lugar" data-id="{{ $lugar->id }}" data-pista="{{ $lugar->pista }}" data-latitud="{{ $lugar->latitud }}" data-longitud="{{ $lugar->longitud }}">Editar</button>
-                        <form action="{{ route('lugares.destroy', $lugar->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn-delete-lugar" data-id="{{ $lugar->id }}">Eliminar</button>
-                            </form>
+                        <button class="btn-edit-lugar" data-id="{{ $lugar->id }}" data-nombre="{{ $lugar->nombre }}" data-pista="{{ $lugar->pista }}" data-latitud="{{ $lugar->latitud }}" data-longitud="{{ $lugar->longitud }}">Editar</button>
+                        <button class="btn-delete-lugar" data-id="{{ $lugar->id }}">Eliminar</button>
                     </td>
                 </tr>
             @endforeach
@@ -206,56 +204,64 @@
     <!-- Botón para añadir un nuevo lugar -->
     <button id="btn-add-lugar">Añadir Lugar</button>
 
-    <!-- Modal para añadir un nuevo lugar -->
-    <div id="modal-lugar" style="display: none;">
-        <div class="modal-content">
-            <h2 id="modal-title-lugar">Añadir Lugar</h2>
+<!-- Modal para añadir un nuevo lugar -->
+<div id="modal-lugar" style="display: none;">
+    <div class="modal-content">
+        <h2 id="modal-title-lugar">Añadir Lugar</h2>
+        
+        <!-- Formulario de creación -->
+        <form id="lugar-form" action="{{ route('lugares.store') }}" method="POST">
+            @csrf
+            <input type="hidden" id="lugar-id" name="id">
 
-            <form id="lugar-form" action="{{ route('lugares.store') }}" method="POST">
-                @csrf
-                <input type="hidden" id="lugar-id" name="id">
+            <label for="nombre-lugar">Nombre</label>
+            <input type="text" id="nombre-lugar" name="nombre" required>
 
-                <label for="pista">Pista</label>
-                <input type="text" id="pista" name="pista" required>
+            <label for="pista">Pista</label>
+            <input type="text" id="pista" name="pista" required>
 
-                <label for="latitud">Latitud</label>
-                <input type="number" id="latitud" name="latitud" required step="0.01">
+            <label for="latitud">Latitud</label>
+            <input type="number" id="latitud" name="latitud" required step="0.01">
 
-                <label for="longitud">Longitud</label>
-                <input type="number" id="longitud" name="longitud" required step="0.01">
+            <label for="longitud">Longitud</label>
+            <input type="number" id="longitud" name="longitud" required step="0.01">
 
-                <button type="submit" id="save-lugar-btn">Guardar</button>
-            </form>
+            <button type="submit" id="save-lugar-btn">Guardar</button>
+        </form>
 
-            <button id="close-modal-lugar">Cerrar</button>
-        </div>
+        <button id="close-modal-lugar">Cerrar</button>
     </div>
+</div>
 
-    <!-- Modal para editar un lugar -->
-    <div id="modal-edit-lugar" style="display: none;">
-        <div class="modal-content">
-            <h2 id="modal-title-edit-lugar">Editar Lugar</h2>
+<!-- Modal para editar un lugar -->
+<div id="modal-edit-lugar" style="display: none;">
+    <div class="modal-content">
+        <h2 id="modal-title-edit-lugar">Editar Lugar</h2>
 
-            <form id="edit-lugar-form" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="edit-lugar-id" name="id">
+        <!-- Formulario de edición -->
+        <form id="edit-lugar-form" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="edit-lugar-id" name="id">
 
-                <label for="edit-pista">Pista</label>
-                <input type="text" id="edit-pista" name="pista" required>
+            <label for="edit-nombre-lugar">Nombre</label>
+            <input type="text" id="edit-nombre-lugar" name="nombre" required>
 
-                <label for="edit-latitud">Latitud</label>
-                <input type="number" id="edit-latitud" name="latitud" required step="0.01">
+            <label for="edit-pista">Pista</label>
+            <input type="text" id="edit-pista" name="pista" required>
 
-                <label for="edit-longitud">Longitud</label>
-                <input type="number" id="edit-longitud" name="longitud" required step="0.01">
+            <label for="edit-latitud">Latitud</label>
+            <input type="number" id="edit-latitud" name="latitud" required step="0.01">
 
-                <button type="submit" id="edit-lugar-btn">Actualizar</button>
-            </form>
+            <label for="edit-longitud">Longitud</label>
+            <input type="number" id="edit-longitud" name="longitud" required step="0.01">
 
-            <button id="close-modal-edit-lugar">Cerrar</button>
-        </div>
+            <button type="submit" id="edit-lugar-btn">Actualizar</button>
+        </form>
+
+        <button id="close-modal-edit-lugar">Cerrar</button>
     </div>
+</div>
 
 
     <!--   ------------------------------ -->
@@ -276,14 +282,12 @@
         <tbody>
             @foreach($niveles as $nivel)
                 <tr>
-                    <td>{{ $nivel->nombre }}</td>
-                    <td>{{ $nivel->lugares->pista }}</td>
-                    <td>{{ $nivel->prueba->pregunta }}</td>
-                    <td>{{ $nivel->gincana->nombre }}</td>
+                <td>{{ $nivel->nombre }}</td>
+                <td>{{ $nivel->lugares ? $nivel->lugares->nombre : 'Sin Lugar' }}</td>
+                <td>{{ $nivel->pruebas ? $nivel->pruebas->pregunta : 'Sin Prueba' }}</td>
+                <td>{{ $nivel->gincana ? $nivel->gincana->nombre : 'Sin Gincana' }}</td>
                     <td>
                         <form action="{{ route('niveles.destroy', $nivel->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
                             <button type="submit">Eliminar</button>
                         </form>
                     </td>

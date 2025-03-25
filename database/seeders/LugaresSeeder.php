@@ -11,7 +11,8 @@ class LugaresSeeder extends Seeder
     {
         DB::table('lugares')->insert([
             [
-                'pista' => 'Jesuites Joan 23',
+                'nombre' => 'Jesuites Joan 23',
+                'pista' => 'Colegio',
                 'latitud' => 41.3851, // Ejemplo de latitud
                 'longitud' => 2.1734,  // Ejemplo de longitud
                 'created_at' => now(),
@@ -19,7 +20,8 @@ class LugaresSeeder extends Seeder
             ],
             // Puedes agregar más lugares si lo deseas
             [
-                'pista' => 'Jesuites Joan 24',
+                'nombre' => 'Jesuites Joan 24',
+                'pista' => 'Cole',
                 'latitud' => 41.3860,
                 'longitud' => 2.1740,
                 'created_at' => now(),

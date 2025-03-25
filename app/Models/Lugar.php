@@ -8,7 +8,7 @@ class Lugar extends Model
 {
     protected $table = 'lugares';  // Nombre de la tabla
 
-    protected $fillable = ['pista', 'latitud', 'longitud'];
+    protected $fillable = ['nombre','pista', 'latitud', 'longitud'];
 
 
     public function niveles()

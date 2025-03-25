@@ -17,6 +17,7 @@ class LugarController extends Controller
     {
         // Validación de los datos
         $request->validate([
+            'nombre' => 'required|string|max:255',
             'pista' => 'required|string|max:255',
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
@@ -24,6 +25,7 @@ class LugarController extends Controller
     
         // Crear el lugar
         $lugar = new Lugar();
+        $lugar->nombre = $request->input('nombre');
         $lugar->pista = $request->input('pista');
         $lugar->latitud = $request->input('latitud');
         $lugar->longitud = $request->input('longitud');
@@ -36,6 +38,7 @@ class LugarController extends Controller
     {
         // Validación de los datos
         $request->validate([
+            'nombre' => 'required|string|max:255',
             'pista' => 'required|string|max:255',
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
@@ -43,6 +46,7 @@ class LugarController extends Controller
     
         // Encontrar el lugar
         $lugar = Lugar::findOrFail($id);
+        $lugar->nombre = $request->input('nombre');
         $lugar->pista = $request->input('pista');
         $lugar->latitud = $request->input('latitud');
         $lugar->longitud = $request->input('longitud');

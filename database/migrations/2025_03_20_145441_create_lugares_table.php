@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('lugares', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre');
             $table->string('pista');
             $table->decimal('latitud', 8, 2);
             $table->decimal('longitud', 8, 2);
