@@ -14,12 +14,14 @@ class LugarDestacado extends Model
 
     public function etiquetas()
     {
-        return $this->belongsToMany(Etiqueta::class, 'lugar_etiqueta', 'id_lugar', 'id_etiqueta');  // Relación muchos a muchos con Etiqueta
+        return $this->belongsToMany(Etiqueta::class, 'lugar_etiqueta', 'id_lugar', 'id_etiqueta');
     }
-
+    public function tipoMarcador()
+    {
+        return $this->belongsTo(TipoMarcador::class, 'tipoMarcador');
+    }
     public function favoritos()
     {
         return $this->hasMany(Favorito::class, 'lugar_destacado_id');
     }
-
 }

@@ -11,4 +11,8 @@ class TipoMarcador extends Model
 
     protected $table = 'tipo_marcador'; // Nombre de la tabla
     protected $fillable = ['nombre', 'icono'];
+    public function lugares()
+    {
+        return $this->hasMany(LugarDestacado::class, 'tipoMarcador');
+    }
 }

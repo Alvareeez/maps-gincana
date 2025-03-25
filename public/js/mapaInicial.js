@@ -117,40 +117,38 @@ function crearRuta(destLat, destLng) {
     // Crear una nueva ruta desde la ubicación del usuario hasta el marcador seleccionado
     routingControl = L.Routing.control({
         waypoints: [
-            L.latLng(userLat, userLng), // Punto de inicio (ubicación del usuario)
-            L.latLng(destLat, destLng) // Punto de destino (marcador seleccionado)
+            L.latLng(userLat, userLng),
+            L.latLng(destLat, destLng)
         ],
-        routeWhileDragging: true, // Permitir arrastrar la ruta
-        show: true, // Mostrar la ruta en el mapa
-        language: 'es' // Idioma de las instrucciones
+        iconUrl: false,
+        routeWhileDragging: true,
+        show: true,
+        language: 'es'
     }).addTo(map);
 }
 
-function guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador) {
+function guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador, etiquetas) {
     fetch('/lugares-destacados', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ nombre, descripcion, direccion, latitud, longitud, tipoMarcador })
+        body: JSON.stringify({
+            nombre,
+            descripcion,
+            direccion,
+            latitud,
+            longitud,
+            tipoMarcador,
+            etiquetas
+        })
     })
         .then(response => response.json())
         .then(data => {
             console.log('Lugar destacado guardado:', data);
-
-            // Añadir el marcador al mapa
-            var marker = L.marker([latitud, longitud]).addTo(map)
-                .bindPopup(`<b>${nombre}</b><br>${descripcion}<br>Dirección: ${direccion}`)
-                .openPopup();
-
-            // Habilitar la eliminación del marcador con clic derecho
-            marker.on('contextmenu', function () {
-                if (confirm('¿Deseas eliminar este lugar?')) {
-                    map.removeLayer(marker);
-                    eliminarLugarDestacado(data.id);
-                }
-            });
+            // Recargar los lugares para incluir el nuevo
+            filtrarPorEtiqueta(document.getElementById('filtro-etiqueta').value);
         })
         .catch(error => console.error('Error al guardar el lugar destacado:', error));
 }
@@ -171,12 +169,20 @@ function cargarTiposMarcadores() {
 
 // Habilitar la funcionalidad de añadir marcadores manualmente
 map.on('click', async function (e) {
+    // Verificar si el clic fue en un elemento que no es el mapa
+    if (e.originalEvent && e.originalEvent.target !== map._container) {
+        return;
+    }
+
     var latlng = e.latlng;
 
-    // Cargar los tipos de marcadores antes de mostrar el modal
-    const opcionesTipoMarcador = await cargarTiposMarcadores();
+    // Cargar los tipos de marcadores y etiquetas
+    const [opcionesTipoMarcador, opcionesEtiquetas] = await Promise.all([
+        cargarTiposMarcadores(),
+        cargarEtiquetas()
+    ]);
 
-    // Mostrar un modal de SweetAlert2 para ingresar los datos del lugar
+    // Mostrar el modal con campos para etiquetas
     Swal.fire({
         title: 'Crear un nuevo lugar',
         html: `
@@ -186,6 +192,9 @@ map.on('click', async function (e) {
                 <input type="text" id="direccion" class="form-control my-3" placeholder="Dirección">
                 <select id="tipoMarcador" class="form-control my-3">
                     ${opcionesTipoMarcador}
+                </select>
+                <select id="etiquetas" class="form-control my-3" multiple>
+                    ${opcionesEtiquetas}
                 </select>
                 <input type="number" id="latitud" class="form-control my-3" value="${latlng.lat}" readonly>
                 <input type="number" id="longitud" class="form-control my-3" value="${latlng.lng}" readonly>
@@ -203,19 +212,21 @@ map.on('click', async function (e) {
             const latitud = document.getElementById('latitud').value;
             const longitud = document.getElementById('longitud').value;
 
+            // Obtener etiquetas seleccionadas
+            const etiquetasSelect = document.getElementById('etiquetas');
+            const etiquetas = Array.from(etiquetasSelect.selectedOptions).map(option => option.value);
+
             if (!nombre || !descripcion || !direccion || !tipoMarcador) {
-                Swal.showValidationMessage('Por favor, completa todos los campos');
+                Swal.showValidationMessage('Por favor, completa todos los campos obligatorios');
                 return false;
             }
 
-            return { nombre, descripcion, direccion, tipoMarcador, latitud, longitud };
+            return { nombre, descripcion, direccion, tipoMarcador, latitud, longitud, etiquetas };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            const { nombre, descripcion, direccion, tipoMarcador, latitud, longitud } = result.value;
-
-            // Guardar el lugar en la base de datos
-            guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador);
+            const { nombre, descripcion, direccion, tipoMarcador, latitud, longitud, etiquetas } = result.value;
+            guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador, etiquetas);
         }
     });
 });
@@ -280,6 +291,162 @@ document.getElementById('buscador').addEventListener('input', function (e) {
         buscarLugar(query);
     }
 });
+// Función para cargar las etiquetas desde la base de datos
+async function cargarEtiquetas() {
+    try {
+        const response = await fetch('/etiquetas');
+        const etiquetas = await response.json();
 
+        // Generar opciones para el select de etiquetas
+        return etiquetas.map(etiqueta =>
+            `<option value="${etiqueta.id}">${etiqueta.nombre}</option>`
+        ).join('');
+    } catch (error) {
+        console.error('Error al cargar etiquetas:', error);
+        return '';
+    }
+}
+
+// Función para crear el filtro de etiquetas en la interfaz
+async function crearFiltroEtiquetas() {
+    const opcionesEtiquetas = await cargarEtiquetas();
+
+    const filtroContainer = document.createElement('div');
+    filtroContainer.className = 'filtro-etiquetas';
+    filtroContainer.style.position = 'absolute';
+    filtroContainer.style.top = '65px';
+    filtroContainer.style.right = '245px';
+    filtroContainer.style.zIndex = '1000';
+    filtroContainer.style.backgroundColor = 'white';
+    filtroContainer.style.padding = '5px';
+    filtroContainer.style.borderRadius = '5px';
+    filtroContainer.style.boxShadow = '0 0 10px rgba(0,0,0,0.2)';
+
+    filtroContainer.innerHTML = `
+        <select id="filtro-etiqueta" class="form-select form-select-sm">
+            <option value="">Todas las etiquetas</option>
+            ${opcionesEtiquetas}
+        </select>
+    `;
+
+    document.getElementById('map').appendChild(filtroContainer);
+
+    // Prevenir la propagación del evento clic en el contenedor y el select
+    filtroContainer.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+    document.getElementById('filtro-etiqueta').addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+    // Evento para filtrar cuando cambia la selección
+    document.getElementById('filtro-etiqueta').addEventListener('change', function () {
+        const etiquetaId = this.value;
+        filtrarPorEtiqueta(etiquetaId);
+    });
+}
+
+// Función para filtrar lugares por etiqueta
+function filtrarPorEtiqueta(etiquetaId) {
+    // Limpiar marcadores existentes
+    lugaresDestacados.forEach(lugar => {
+        if (lugar.marker) {
+            map.removeLayer(lugar.marker);
+        }
+    });
+    lugaresDestacados = [];
+
+    // Mostrar carga mientras se obtienen los datos
+    Swal.fire({
+        title: 'Cargando lugares...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Construir URL de consulta
+    let url = '/lugares-destacados';
+    if (etiquetaId) {
+        url += `?etiqueta=${etiquetaId}`;
+    }
+
+    fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la respuesta del servidor');
+                });
+            }
+            return response.json();
+        })
+        .then(lugares => {
+            Swal.close();
+
+            if (lugares.error) {
+                throw new Error(lugares.message);
+            }
+
+            lugares.forEach(lugar => {
+                // Crear marcador
+                const marker = L.marker([lugar.latitud, lugar.longitud]).addTo(map);
+
+                // Obtener nombres de etiquetas si existen
+                const etiquetasNames = lugar.etiquetas
+                    ? lugar.etiquetas.map(e => e.nombre).join(', ')
+                    : 'Sin etiquetas';
+
+                // Crear contenido del popup
+                const popupContent = `
+                <b>${lugar.nombre}</b><br>
+                ${lugar.descripcion}<br>
+                <small>Etiquetas: ${etiquetasNames}</small><br>
+                Dirección: ${lugar.direccion}<br>
+                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+            `;
+
+                marker.bindPopup(popupContent);
+
+                lugaresDestacados.push({
+                    id: lugar.id,
+                    nombre: lugar.nombre,
+                    direccion: lugar.direccion,
+                    latitud: lugar.latitud,
+                    longitud: lugar.longitud,
+                    marker: marker
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error al filtrar lugares:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los lugares. Verifica la consola para más detalles.'
+            });
+        });
+}
+// Función para crear iconos basados en el tipo de marcador
+function crearIconoMarcador(tipoMarcador) {
+    return L.icon({
+        iconUrl: tipoMarcador.icono || '/img/marker-default.png', // Ruta por defecto si no hay icono
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+    });
+}
 // Cargar los lugares destacados al iniciar el mapa
 cargarLugaresDestacados();
+// Inicializar el filtro cuando se carga el mapa
+document.addEventListener('DOMContentLoaded', function () {
+    crearFiltroEtiquetas();
+}); 

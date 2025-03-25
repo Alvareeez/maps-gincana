@@ -29,7 +29,9 @@ Route::post('register', [AuthController::class, 'register']);
 Route::get('/mapa', function () {
     return view('mapa');
 });
-
+Route::get('/etiquetas', function () {
+    return response()->json(\App\Models\Etiqueta::all());
+});
 // Rutas para manejar los lugares destacados
 Route::get('/lugares-destacados', [LugarDestacadoController::class, 'index']); // Obtener todos los lugares
 Route::post('/lugares-destacados', [LugarDestacadoController::class, 'store']); // Crear un lugar
@@ -38,3 +40,4 @@ Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'des
 Route::get('/tipo-marcadores', [TipoMarcadorController::class, 'index']);
 Route::get('/buscar-lugares', [LugarDestacadoController::class, 'buscar']);
 Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy']);
+Route::get('/lugares-destacados-con-relaciones', [LugarDestacadoController::class, 'indexWithRelations']);
