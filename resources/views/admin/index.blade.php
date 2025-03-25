@@ -269,6 +269,8 @@
     <!--   ------------------------------ -->
 
     <h1>Lista de Niveles</h1>
+
+    <!-- Tabla de niveles -->
     <table>
         <thead>
             <tr>
@@ -282,41 +284,48 @@
         <tbody>
             @foreach($niveles as $nivel)
                 <tr>
-                <td>{{ $nivel->nombre }}</td>
-                <td>{{ $nivel->lugares ? $nivel->lugares->nombre : 'Sin Lugar' }}</td>
-                <td>{{ $nivel->pruebas ? $nivel->pruebas->pregunta : 'Sin Prueba' }}</td>
-                <td>{{ $nivel->gincana ? $nivel->gincana->nombre : 'Sin Gincana' }}</td>
+                    <td>{{ $nivel->nombre }}</td>
+                    <td>{{ $nivel->lugar->nombre }}</td>
+                    <td>{{ $nivel->prueba->pregunta }}</td>
+                    <td>{{ $nivel->gincana->nombre }}</td>
                     <td>
-                        <form action="{{ route('niveles.destroy', $nivel->id) }}" method="POST" style="display:inline;">
-                            <button type="submit">Eliminar</button>
-                        </form>
+                        <!-- Botón para editar nivel -->
+                        <button class="btn-edit-nivel" data-id="{{ $nivel->id }}" data-nombre="{{ $nivel->nombre }}" data-id_lugar="{{ $nivel->id_lugar }}" data-id_prueba="{{ $nivel->id_prueba }}" data-id_gincana="{{ $nivel->id_gincana }}">Editar</button>
+                        <!-- Botón para eliminar nivel -->
+                        <button class="btn-delete-nivel" data-id="{{ $nivel->id }}">Eliminar</button>
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
+    <!-- Botón para añadir un nuevo nivel -->
     <button id="btn-add-nivel">Añadir Nivel</button>
 
     <!-- Modal para añadir un nuevo nivel -->
     <div id="modal-nivel" style="display: none;">
         <div class="modal-content">
-            <h2>Añadir Nivel</h2>
+            <h2 id="modal-title-nivel">Añadir Nivel</h2>
 
-            <form id="nivel-form" method="POST" action="{{ route('niveles.store') }}">
+            <!-- Formulario de creación -->
+            <form id="nivel-form" action="{{ route('niveles.store') }}" method="POST">
                 @csrf
-                <label for="nombre">Nombre</label>
-                <input type="text" id="nombre" name="nombre" required>
+                <input type="hidden" id="nivel-id" name="id">
+
+                <label for="nombre-nivel">Nombre</label>
+                <input type="text" id="nombre-nivel" name="nombre" required>
 
                 <label for="id_lugar">Lugar</label>
                 <select id="id_lugar" name="id_lugar" required>
+                    <option value="">Selecciona un lugar</option>
                     @foreach($lugares as $lugar)
-                        <option value="{{ $lugar->id }}">{{ $lugar->pista }}</option>
+                        <option value="{{ $lugar->id }}">{{ $lugar->nombre }}</option>
                     @endforeach
                 </select>
 
                 <label for="id_prueba">Prueba</label>
                 <select id="id_prueba" name="id_prueba" required>
+                    <option value="">Selecciona una prueba</option>
                     @foreach($pruebas as $prueba)
                         <option value="{{ $prueba->id }}">{{ $prueba->pregunta }}</option>
                     @endforeach
@@ -324,20 +333,63 @@
 
                 <label for="id_gincana">Gincana</label>
                 <select id="id_gincana" name="id_gincana" required>
+                    <option value="">Selecciona una gincana</option>
                     @foreach($gincanas as $gincana)
                         <option value="{{ $gincana->id }}">{{ $gincana->nombre }}</option>
                     @endforeach
                 </select>
 
-                <button type="submit">Guardar</button>
+                <button type="submit" id="save-nivel-btn">Guardar</button>
             </form>
 
             <button id="close-modal-nivel">Cerrar</button>
         </div>
     </div>
 
+    <!-- Modal para editar un nivel -->
+    <div id="modal-edit-nivel" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-edit-nivel">Editar Nivel</h2>
 
+            <!-- Formulario de edición -->
+            <form id="edit-nivel-form" method="POST" action="">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="edit-nivel-id" name="id">
 
+                <label for="edit-nombre-nivel">Nombre</label>
+                <input type="text" id="edit-nombre-nivel" name="nombre" required>
+
+                <label for="edit-id_lugar">Lugar</label>
+                <select id="edit-id_lugar" name="id_lugar" required>
+                    <option value="">Selecciona un lugar</option>
+                    @foreach($lugares as $lugar)
+                        <option value="{{ $lugar->id }}">{{ $lugar->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <label for="edit-id_prueba">Prueba</label>
+                <select id="edit-id_prueba" name="id_prueba" required>
+                    <option value="">Selecciona una prueba</option>
+                    @foreach($pruebas as $prueba)
+                        <option value="{{ $prueba->id }}">{{ $prueba->pregunta }}</option>
+                    @endforeach
+                </select>
+
+                <label for="edit-id_gincana">Gincana</label>
+                <select id="edit-id_gincana" name="id_gincana" required>
+                    <option value="">Selecciona una gincana</option>
+                    @foreach($gincanas as $gincana)
+                        <option value="{{ $gincana->id }}">{{ $gincana->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" id="edit-nivel-btn">Actualizar</button>
+            </form>
+
+            <button id="close-modal-edit-nivel">Cerrar</button>
+        </div>
+    </div>
 
 
 

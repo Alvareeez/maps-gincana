@@ -22,8 +22,40 @@ class NivelController extends Controller
 
     public function store(Request $request)
     {
-        Nivel::create($request->all());
-        return redirect()->route('niveles.index');
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'id_lugar' => 'required|exists:lugares,id',
+            'id_prueba' => 'required|exists:pruebas,id',
+            'id_gincana' => 'required|exists:gincanas,id',
+        ]);
+
+        $nivel = Nivel::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nivel creado correctamente',
+            'data' => $nivel
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $nivel = Nivel::findOrFail($id);
+
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'id_lugar' => 'required|exists:lugares,id',
+            'id_prueba' => 'required|exists:pruebas,id',
+            'id_gincana' => 'required|exists:gincanas,id',
+        ]);
+
+        $nivel->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nivel actualizado correctamente',
+            'data' => $nivel
+        ]);
     }
 
     public function destroy($id)
@@ -31,6 +63,9 @@ class NivelController extends Controller
         $nivel = Nivel::findOrFail($id);
         $nivel->delete();
 
-        return redirect()->route('niveles.index');
+        return response()->json([
+            'success' => true,
+            'message' => 'Nivel eliminado correctamente'
+        ]);
     }
 }

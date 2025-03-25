@@ -90,15 +90,10 @@ Route::middleware(['auth'])->group(function () {
 
     // CRUDS NIVELES
 
-    // Ruta para añadir un nuevo nivel
+    Route::get('/niveles', [NivelController::class, 'index'])->name('niveles.index');
     Route::post('/niveles', [NivelController::class, 'store'])->name('niveles.store');
-
-    // Ruta para actualizar un nivel existente
-    Route::put('/niveles/{id}', [NivelController::class, 'update'])->name('niveles.update');
-
-    // Ruta para eliminar un nivel
-    Route::delete('/niveles/{id}', [NivelController::class, 'destroy'])->name('niveles.destroy');
-
+    Route::put('/niveles/{nivel}', [NivelController::class, 'update'])->name('niveles.update');
+    Route::delete('/niveles/{nivel}', [NivelController::class, 'destroy'])->name('niveles.destroy');        
 
 
 });
