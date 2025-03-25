@@ -22,7 +22,7 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('/home');
+            return redirect()->route('home');
         }
 
         return back()->withErrors(['email' => 'Credenciales incorrectas.']);

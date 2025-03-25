@@ -49,7 +49,7 @@
             @else
                 <!-- Si está logueado -->
                 <a href="#" class="btn btn-map">MAPA</a>
-                <a href="#" class="btn btn-gincana">GINCANA</a>
+                <a href="{{ route('gincana.menu') }}" class="btn btn-gincana">GINCANA</a>
 
                 @if(auth()->user()->id_rol == 1)
                     <a href="{{ route('admin.index') }}" class="btn btn-admin">ADMIN</a>

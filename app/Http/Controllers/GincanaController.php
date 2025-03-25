@@ -47,6 +47,26 @@ class GincanaController extends Controller
             return response()->json($resultado);
         }
 
+        // Recupera la información de una gincana
+        public function infoGincana($id)
+        {
+            $gincana = Gincana::find($id);
+
+            if ($gincana) {
+                $resultado = [
+                    'estado' => 'encontrado',
+                    'respuesta' => $gincana
+                ];
+            } else {
+                $resultado = [
+                    'estado' => 'no encontrado',
+                    'respuesta' => 'No se ha encontrado la gincana.'
+                ];
+            }
+
+            return response()->json($resultado);
+        }
+
         // Comprueba si la gincana existe o sigue abierta
         public function gincanaAbierta($id)
         {

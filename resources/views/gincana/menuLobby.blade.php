@@ -9,7 +9,7 @@
 
 @section('content')
     <a href="{{ route('gincana.menu') }}">Volver atrás</a>
-    <h1>Grupo</h1>
+    <h3 id="nombreGrupo"></h3>
     <h1>Grupos Disponibles</h1>
     <div id="contenedorGrupos">
 

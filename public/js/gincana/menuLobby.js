@@ -2,19 +2,18 @@ let estaCargando = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     const contenedorGrupos = document.getElementById('contenedorGrupos');
-    actualizarGrupos();
+    let id = window.location.pathname.split('/').pop();
+    actualizarGrupos(id);
     setInterval(function() {
-        actualizarGrupos();
+        actualizarGrupos(id);
     }, 10000);
 });
 
-function actualizarGrupos() {
+function actualizarGrupos(id) {
     if (estaCargando) {
         return;
     }
     estaCargando = true;
-
-    let id = window.location.pathname.split('/').pop(); 
 
     fetch(`/gincana/api/gruposDisponibles/${id}`, {
         method: 'GET'
