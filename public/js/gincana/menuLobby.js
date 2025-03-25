@@ -25,14 +25,15 @@ function actualizarGrupos(id) {
         if (data.estado == 'no disponible') {
             window.location.href = '/gincana';
         } else if (data.estado == 'encontrado') {
-            contenido = '<ul>';
+            contenido = '<ul class="list-group">';
             data.respuesta.forEach(grupo => {
                 contenido += `
-                    <li>
-                        <a href="#">
-                            ${grupo.nombre}
-                        </a>
-                        (x/x)
+                    <li class="list-group-item">
+                        <form action="/gincana/api/unirse" method="POST">
+                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                            <input type="hidden" name="id_grupo" value="${grupo.id}">
+                            <button type="submit" class="btn btn-primary w-100">${grupo.nombre} (${grupo.jugadores_actuales}/${grupo.max_jugadores})</button>
+                        </form>
                     </li>
                 `;
             });
@@ -48,5 +49,40 @@ function actualizarGrupos(id) {
     })
     .finally(() => {
         estaCargando = false;
+    });
+}
+
+function mostrarGrupos(grupos) {
+    const contenedorGrupos = document.getElementById('contenedorGrupos');
+    contenedorGrupos.innerHTML = '';
+
+    grupos.forEach(grupo => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/gincana/api/unirse';
+        
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '_token';
+        tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const grupoInput = document.createElement('input');
+        grupoInput.type = 'hidden';
+        grupoInput.name = 'id_grupo';
+        grupoInput.value = grupo.id;
+        
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.className = 'btn btn-primary w-100';
+        button.textContent = `${grupo.nombre} (${grupo.jugadores_actuales}/${grupo.max_jugadores})`;
+        
+        form.appendChild(tokenInput);
+        form.appendChild(grupoInput);
+        form.appendChild(button);
+        li.appendChild(form);
+        contenedorGrupos.appendChild(li);
     });
 }

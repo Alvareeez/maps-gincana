@@ -66,9 +66,14 @@ Route::middleware(['auth'])->group(function () {
         // Vistas
         Route::get('/', [GincanaController::class, 'vistaGincanaMenu'])->name('gincana.menu');
         Route::get('/lobby/{id}', [GincanaController::class, 'vistaGincanaLobby'])->name('gincana.lobby');
+        Route::get('/juego/{id}', [GincanaController::class, 'vistaGincanaJuego'])->name('gincana.juego');
+        Route::post('/salir', [GincanaController::class, 'salirGrupo'])->name('gincana.salir');
 
         // APIs
         Route::get('/api/gincanasAbiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.api.gincanasAbiertas');
         Route::get('/api/gruposDisponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.api.gruposDisponibles');
+
+        // Acciones
+        Route::post('/api/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.api.unirse');
     });
 });
