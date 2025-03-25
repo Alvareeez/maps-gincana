@@ -392,6 +392,127 @@
     </div>
 
 
+    <!--   ------------------------------ -->
+            <!-- CRUDS DE GINCANA -->
+    <!--   ------------------------------ -->
+
+        <h1>Lista de Gincanas</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Jugadores</th>
+                <th>Grupos</th>
+                <th>Grupo Ganador</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($gincanas as $gincana)
+                <tr>
+                    <td>{{ $gincana->nombre }}</td>
+                    <td>{{ ucfirst($gincana->estado) }}</td>
+                    <td>{{ $gincana->cantidad_jugadores }}</td>
+                    <td>{{ $gincana->cantidad_grupos }}</td>
+                    <td>{{ $gincana->ganadorGrupo->nombre ?? 'Sin ganador' }}</td>
+                    <td>
+                        <button class="btn-edit-gincana" 
+                                data-id="{{ $gincana->id }}"
+                                data-nombre="{{ $gincana->nombre }}"
+                                data-estado="{{ $gincana->estado }}"
+                                data-cantidad_jugadores="{{ $gincana->cantidad_jugadores }}"
+                                data-cantidad_grupos="{{ $gincana->cantidad_grupos }}"
+                                data-id_ganador="{{ $gincana->id_ganador }}">
+                            Editar
+                        </button>
+                        <button class="btn-delete-gincana" data-id="{{ $gincana->id }}">Eliminar</button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <button id="btn-add-gincana">Añadir Gincana</button>
+
+    <!-- Modal para añadir -->
+    <div id="modal-gincana" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-gincana">Añadir Gincana</h2>
+            <form id="gincana-form" action="{{ route('gincanas.store') }}" method="POST">
+                @csrf
+                <input type="hidden" id="gincana-id" name="id">
+
+                <label for="nombre-gincana">Nombre</label>
+                <input type="text" id="nombre-gincana" name="nombre" required>
+
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado" required>
+                    <option value="abierta">Abierta</option>
+                    <option value="ocupada">Ocupada</option>
+                </select>
+
+                <label for="cantidad_jugadores">Cantidad de Jugadores</label>
+                <input type="number" id="cantidad_jugadores" name="cantidad_jugadores" min="1" required>
+
+                <label for="cantidad_grupos">Cantidad de Grupos</label>
+                <input type="number" id="cantidad_grupos" name="cantidad_grupos" min="1" required>
+
+                <label for="id_ganador">Grupo Ganador (opcional)</label>
+                <select id="id_ganador" name="id_ganador">
+                    <option value="">Seleccione un grupo ganador</option>
+                    @foreach($grupos as $grupo)
+                        <option value="{{ $grupo->id }}">{{ $grupo->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" id="save-gincana-btn">Guardar</button>
+            </form>
+            <button id="close-modal-gincana">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal para editar -->
+    <div id="modal-edit-gincana" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-edit-gincana">Editar Gincana</h2>
+            <form id="edit-gincana-form" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="edit-gincana-id" name="id">
+
+                <label for="edit-nombre-gincana">Nombre</label>
+                <input type="text" id="edit-nombre-gincana" name="nombre" required>
+
+                <label for="edit-estado">Estado</label>
+                <select id="edit-estado" name="estado" required>
+                    <option value="abierta">Abierta</option>
+                    <option value="ocupada">Ocupada</option>
+                </select>
+
+                <label for="edit-cantidad_jugadores">Cantidad de Jugadores</label>
+                <input type="number" id="edit-cantidad_jugadores" name="cantidad_jugadores" min="1" required>
+
+                <label for="edit-cantidad_grupos">Cantidad de Grupos</label>
+                <input type="number" id="edit-cantidad_grupos" name="cantidad_grupos" min="1" required>
+
+                <label for="edit-id_ganador">Grupo Ganador (opcional)</label>
+                <select id="edit-id_ganador" name="id_ganador">
+                    <option value="">Seleccione un grupo ganador</option>
+                    @foreach($grupos as $grupo)
+                        <option value="{{ $grupo->id }}">{{ $grupo->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" id="edit-gincana-btn">Actualizar</button>
+            </form>
+            <button id="close-modal-edit-gincana">Cerrar</button>
+        </div>
+    </div>
+
+
+
 
     <!-- Incluir los archivos JS -->
     <script src="{{ asset('js/editUser.js') }}"></script>
@@ -400,6 +521,7 @@
     <script src="{{ asset('js/managePrueba.js') }}"></script>
     <script src="{{ asset('js/manageLugar.js') }}"></script>
     <script src="{{ asset('js/manageNivel.js') }}"></script>
+    <script src="{{ asset('js/manageGincana.js') }}"></script>
 
 
 </body>

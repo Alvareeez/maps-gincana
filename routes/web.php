@@ -7,6 +7,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PruebaController;
 use App\Http\Controllers\LugarController;
 use App\Http\Controllers\NivelController;
+use App\Http\Controllers\GincanaController;
+
 use Illuminate\Support\Facades\Auth;
 
 // Rutas de acceso público (sin autenticación) ----------------------------------------------------------
@@ -93,8 +95,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/niveles', [NivelController::class, 'index'])->name('niveles.index');
     Route::post('/niveles', [NivelController::class, 'store'])->name('niveles.store');
     Route::put('/niveles/{nivel}', [NivelController::class, 'update'])->name('niveles.update');
-    Route::delete('/niveles/{nivel}', [NivelController::class, 'destroy'])->name('niveles.destroy');        
+    Route::delete('/niveles/{nivel}', [NivelController::class, 'destroy'])->name('niveles.destroy');     
+    
+    
+    // CRUDS GINCANAS
 
-
+    Route::get('/gincanas', [GincanaController::class, 'index'])->name('gincanas.index');
+    Route::post('/gincanas', [GincanaController::class, 'store'])->name('gincanas.store');
+    Route::put('/gincanas/{gincana}', [GincanaController::class, 'update'])->name('gincanas.update');
+    Route::delete('/gincanas/{gincana}', [GincanaController::class, 'destroy'])->name('gincanas.destroy');
 });
 
