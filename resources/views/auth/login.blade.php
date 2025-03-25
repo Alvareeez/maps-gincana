@@ -14,7 +14,9 @@
     <div class="login-container">
         <!-- Logo a la izquierda -->
         <div class="logo">
+            <a href="/" class="logo-link">
             <img src="{{ asset('img/fondo_GA.png') }}" alt="Logo">
+            </a>
         </div>
 
         <!-- Formulario de Login -->

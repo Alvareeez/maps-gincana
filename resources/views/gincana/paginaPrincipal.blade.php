@@ -4,13 +4,16 @@
 
 {{-- @section('title', 'Issue ' . $data['issue']->id) --}}
 
-@section('headerTitle', 'Unirse a gincana')
-
+@section('headerTitle', 'Escoge una gincana')
+@section('volverAtras')
+<a href="{{ route('home') }}" class="back-button">Volver atrás</a>
+@endsection
 
 @section('content')
-    <h1>Gincanas Disponibles</h1>
-    <div id="contenedorGincanas">
-
+    <div class="container text-center mt-5">
+        <div id="contenedorGincanas" class="row justify-content-center">
+            <!-- Aquí se cargarán las gincanas dinámicamente -->
+        </div>
     </div>
 @endsection
 

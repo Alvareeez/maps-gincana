@@ -16,7 +16,15 @@
 <body>
     <header>
         <nav>
-            @yield('headerTitle')
+        
+        <!-- Botón "Volver atrás" -->
+        <div class="back-button-container">
+            @yield('volverAtras') <!-- Aquí va tu botón dinámico -->
+        </div>
+        <!-- Título principal -->
+        <div class="header-title">
+            @yield('headerTitle') <!-- Aquí va tu título dinámico -->
+        </div>
         </nav>
     </header>
 

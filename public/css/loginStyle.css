@@ -31,7 +31,8 @@ body {
 .logo img {
     width: 80px;
     margin-bottom: 20px;
-    animation: fadeIn 1.5s ease-out; /* Aparece lentamente */
+    animation: fadeIn 1.5s ease-out;
+    /* Aparece lentamente */
 }
 
 /* Formulario de login */
@@ -40,12 +41,14 @@ body {
     flex-direction: column;
     width: 100%;
     opacity: 0;
-    animation: fadeInUp 1.5s ease-out forwards; /* Aparece con deslizamiento */
+    animation: fadeInUp 1.5s ease-out forwards;
+    /* Aparece con deslizamiento */
 }
 
 /* Inputs */
 input {
-    width: 80%; /* Cambiado a un 80% para hacer los inputs más cortos */
+    width: 80%;
+    /* Cambiado a un 80% para hacer los inputs más cortos */
     padding: 12px;
     margin: 10px 0;
     border: 2px solid #ffcc00;
@@ -56,16 +59,20 @@ input {
     outline: none;
     transition: 0.3s ease-in-out;
     opacity: 0;
-    transform: translateX(-100%); /* Comienza fuera de la pantalla */
-    animation: slideIn 1.5s ease-out forwards; /* Animación de deslizamiento */
+    transform: translateX(-100%);
+    /* Comienza fuera de la pantalla */
+    animation: slideIn 1.5s ease-out forwards;
+    /* Animación de deslizamiento */
 }
 
 input:nth-child(1) {
-    animation-delay: 0.3s; /* Retraso para el primer input */
+    animation-delay: 0.3s;
+    /* Retraso para el primer input */
 }
 
 input:nth-child(2) {
-    animation-delay: 0.6s; /* Retraso para el segundo input */
+    animation-delay: 0.6s;
+    /* Retraso para el segundo input */
 }
 
 /* Estilos del placeholder */
@@ -81,7 +88,8 @@ input:focus {
 
 /* Botón */
 button {
-    width: 80%; /* Cambiado a un 80% para el botón */
+    width: 80%;
+    /* Cambiado a un 80% para el botón */
     padding: 12px;
     margin-top: 15px;
     border: none;
@@ -93,9 +101,11 @@ button {
     cursor: pointer;
     transition: 0.3s ease-in-out;
     opacity: 0;
-    transform: translateX(-100%); /* Comienza fuera de la pantalla */
+    transform: translateX(-100%);
+    /* Comienza fuera de la pantalla */
     animation: slideIn 1.5s ease-out forwards;
-    animation-delay: 1s; /* Retraso para el botón */
+    animation-delay: 1s;
+    /* Retraso para el botón */
 }
 
 /* Botón hover */
@@ -108,11 +118,14 @@ button:hover {
 @keyframes slideIn {
     0% {
         opacity: 0;
-        transform: translateX(-100%); /* Empieza fuera de la pantalla a la izquierda */
+        transform: translateX(-100%);
+        /* Empieza fuera de la pantalla a la izquierda */
     }
+
     100% {
         opacity: 1;
-        transform: translateX(0); /* Llega a su posición original */
+        transform: translateX(0);
+        /* Llega a su posición original */
     }
 }
 
@@ -120,11 +133,14 @@ button:hover {
 @keyframes fadeInUp {
     0% {
         opacity: 0;
-        transform: translateY(20px); /* Empieza desde abajo */
+        transform: translateY(20px);
+        /* Empieza desde abajo */
     }
+
     100% {
         opacity: 1;
-        transform: translateY(0); /* Llega a su posición original */
+        transform: translateY(0);
+        /* Llega a su posición original */
     }
 }
 
@@ -132,11 +148,14 @@ button:hover {
 @keyframes fadeIn {
     0% {
         opacity: 0;
-        transform: translateY(-20px); /* Empieza desde arriba */
+        transform: translateY(-20px);
+        /* Empieza desde arriba */
     }
+
     100% {
         opacity: 1;
-        transform: translateY(0); /* Llega a su posición original */
+        transform: translateY(0);
+        /* Llega a su posición original */
     }
 }
 
@@ -155,7 +174,8 @@ button:hover {
         font-size: 24px;
     }
 
-    input, button {
+    input,
+    button {
         font-size: 16px;
         padding: 12px;
         width: 80%;

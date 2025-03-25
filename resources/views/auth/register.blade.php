@@ -14,9 +14,11 @@
 
     <div class="container">
         <div class="register-container">
-            <div class="logo">
-                <img src="img/fondo_GA.png" alt="Logo">
-            </div>
+        <div class="logo">
+            <a href="/" class="logo-link">
+            <img src="{{ asset('img/fondo_GA.png') }}" alt="Logo">
+            </a>
+        </div>
 
             <div class="register-form">
                 <h1>Registrarse</h1>

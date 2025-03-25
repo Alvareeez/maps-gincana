@@ -1,0 +1,26 @@
+#map {
+    height: 600px;
+    width: 100%;
+}
+
+#buscador {
+    z-index: 1000;
+}
+
+/* mapa.css */
+.filtro-etiquetas {
+    max-width: 250px;
+}
+
+.filtro-etiquetas select {
+    width: 100%;
+}
+
+/* Mejorar el aspecto del select múltiple en el SweetAlert */
+.swal2-popup .form-control[multiple] {
+    height: auto;
+    min-height: 38px;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 768px) {}

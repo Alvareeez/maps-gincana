@@ -9,39 +9,47 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function actualizarGincanas() {
-    if (estaCargando) {
-        return;
-    }
+    if (estaCargando) return;
     estaCargando = true;
 
+    // 1. Añadir una clase de "parpadeo" para indicar que se está actualizando
+    contenedorGincanas.classList.add('actualizando');
+    
     fetch('/gincana/api/gincanasAbiertas', {
         method: 'GET'
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
         let contenido = "";
         if (data.estado == 'encontrado') {
-            contenido = '<ul>';
-            data.respuesta.forEach(gincana => {
+            data.respuesta.forEach((gincana) => {
                 contenido += `
-                    <li>
-                        <a href="/gincana/lobby/${gincana.id}">
-                            ${gincana.nombre}
+                    <div class="col-12 col-md-6 col-lg-4 mb-3">
+                        <a href="/gincana/lobby/${gincana.id}" class="btn btn-outline-warning btn-block py-3 gincana-btn">
+                            <strong>${gincana.nombre}</strong>
                         </a>
-                        (${gincana.cantidad_grupos} grupos de ${gincana.cantidad_jugadores} jugadores)
-                    </li>
+                        <p class="mt-2 text-white">
+                            (${gincana.cantidad_grupos} grupos de ${gincana.cantidad_jugadores} jugadores)
+                        </p>
+                    </div>
                 `;
             });
-            contenido += '</ul>';
         } else {
-            contenido = '<p>No se ha encontrado ninguna gincana abierta.</p>';
+            contenido = `<div class="col-12"><p class="text-white">No hay gincanas abiertas.</p></div>`;
         }
+
+        // 2. Actualizar el contenido y quitar la clase de actualización
         contenedorGincanas.innerHTML = contenido;
+        contenedorGincanas.classList.remove('actualizando');
     })
     .catch(error => {
-        console.error('Error al hacer la solicitud:', error);
-        contenedorGincanas.innerHTML = '<p>Ha habido un error: ' + error + '</p>';
+        console.error('Error:', error);
+        contenedorGincanas.innerHTML = `
+            <div class="col-12">
+                <p class="text-danger">Error al cargar gincanas: ${error.message}</p>
+            </div>
+        `;
+        contenedorGincanas.classList.remove('actualizando');
     })
     .finally(() => {
         estaCargando = false;

@@ -25,21 +25,25 @@ function actualizarGrupos(id) {
         if (data.estado == 'no disponible') {
             window.location.href = '/gincana';
         } else if (data.estado == 'encontrado') {
-            contenido = '<ul class="list-group">';
+            contenido = '<div class="row justify-content-center">';
             data.respuesta.forEach(grupo => {
                 contenido += `
-                    <li class="list-group-item">
+                    <div class="col-12 col-md-6 col-lg-4 mb-3">
                         <form action="/gincana/api/unirse" method="POST">
                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                             <input type="hidden" name="id_grupo" value="${grupo.id}">
-                            <button type="submit" class="btn btn-primary w-100">${grupo.nombre} (${grupo.jugadores_actuales}/${grupo.max_jugadores})</button>
+                            <button type="submit" class="btn btn-outline-warning btn-block py-3 gincana-btn">
+                                <strong>${grupo.nombre}
+                                (${grupo.jugadores_actuales}/${grupo.max_jugadores})
+                                </strong>
+                            </button>
                         </form>
-                    </li>
+                    </div>
                 `;
             });
-            contenido += '</ul>';
+            contenido += '</div>';
         } else {
-            contenido = '<p>No se ha encontrado ningún grupo disponible.</p>';
+            contenido = `<div class="col-12"><p class="text-white">No se ha encontrado ningún grupo disponible.</p></div>`;
         }
         contenedorGrupos.innerHTML = contenido;
     })
