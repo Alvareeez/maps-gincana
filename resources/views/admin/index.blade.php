@@ -74,7 +74,7 @@
                 <button type="submit" id="save-btn">Guardar</button>
             </form>
 
-            <button id="close-modal">Cerrar</button>
+            <button id="close-modal">X</button>
         </div>
     </div>
 
@@ -113,7 +113,7 @@
                 <button type="submit" id="edit-btn">Actualizar</button>
             </form>
 
-            <button id="close-modal-edit">Cerrar</button>
+            <button id="close-modal-edit">X</button>
         </div>
     </div>
 
@@ -165,7 +165,7 @@
                 <button type="submit" id="save-prueba-btn">Guardar</button>
             </form>
 
-            <button id="close-modal-prueba">Cerrar</button>
+            <button id="close-modal-prueba">X</button>
         </div>
     </div>
 
@@ -229,7 +229,7 @@
             <button type="submit" id="save-lugar-btn">Guardar</button>
         </form>
 
-        <button id="close-modal-lugar">Cerrar</button>
+        <button id="close-modal-lugar">X</button>
     </div>
 </div>
 
@@ -259,7 +259,7 @@
             <button type="submit" id="edit-lugar-btn">Actualizar</button>
         </form>
 
-        <button id="close-modal-edit-lugar">Cerrar</button>
+        <button id="close-modal-edit-lugar">X</button>
     </div>
 </div>
 
@@ -342,7 +342,7 @@
                 <button type="submit" id="save-nivel-btn">Guardar</button>
             </form>
 
-            <button id="close-modal-nivel">Cerrar</button>
+            <button id="close-modal-nivel">X</button>
         </div>
     </div>
 
@@ -387,7 +387,7 @@
                 <button type="submit" id="edit-nivel-btn">Actualizar</button>
             </form>
 
-            <button id="close-modal-edit-nivel">Cerrar</button>
+            <button id="close-modal-edit-nivel">X</button>
         </div>
     </div>
 
@@ -469,7 +469,7 @@
 
                 <button type="submit" id="save-gincana-btn">Guardar</button>
             </form>
-            <button id="close-modal-gincana">Cerrar</button>
+            <button id="close-modal-gincana">X</button>
         </div>
     </div>
 
@@ -507,7 +507,7 @@
 
                 <button type="submit" id="edit-gincana-btn">Actualizar</button>
             </form>
-            <button id="close-modal-edit-gincana">Cerrar</button>
+            <button id="close-modal-edit-gincana">X</button>
         </div>
     </div>
 

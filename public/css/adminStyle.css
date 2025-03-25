@@ -1,25 +1,301 @@
-/* Estilo básico para todos los modales */
-#modal, #modal-edit, #modal-prueba, #modal-lugar, #modal-edit-lugar, #modal-nivel, #modal-edit-nivel,#modal-gincana, #modal-edit-gincana {
+/* Estilos generales */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #111;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Animación de fondo para el área de administración */
+.admin-bg {
+    background: linear-gradient(135deg, #000000, #1a1a1a, #2d2d2d);
+    background-size: 400% 400%;
+    animation: adminBackgroundAnimation 15s ease infinite;
+    min-height: 100vh;
+}
+
+@keyframes adminBackgroundAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Títulos */
+h1 {
+    font-size: 2.5rem;
+    color: yellow;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: yellow;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+th {
+    background-color: #222;
+    color: yellow;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+tr:nth-child(even) {
+    background-color: rgba(255, 255, 0, 0.05);
+}
+
+tr:hover {
+    background-color: rgba(255, 255, 0, 0.1);
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+/* Modales */
+#modal, #modal-edit, #modal-prueba, #modal-lugar, 
+#modal-edit-lugar, #modal-nivel, #modal-edit-nivel,
+#modal-gincana, #modal-edit-gincana {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     display: none;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* Estilo para el contenido de los modales */
 .modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    width: 400px;
+    background: linear-gradient(145deg, #1a1a1a, #222);
+    padding: 30px;
+    border-radius: 15px;
+    width: 450px;
+    max-width: 90%;
+    box-shadow: 0 0 30px rgba(255, 255, 0, 0.3);
+    border: 1px solid rgba(255, 255, 0, 0.2);
+    position: relative;
+    transform: translateY(-20px);
+    opacity: 0;
+    animation: modalFadeIn 0.4s ease-out forwards;
 }
 
-/* Estilo para los botones */
+@keyframes modalFadeIn {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    color: yellow;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.8rem;
+    text-shadow: 0 0 8px rgba(255, 255, 0, 0.4);
+}
+
+/* Formularios */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    color: #ddd;
+    font-weight: bold;
+    margin-bottom: -10px;
+}
+
+input, select {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background-color: #222;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: yellow;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+    background-color: #2a2a2a;
+}
+
+/* Botones */
 button {
     cursor: pointer;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 1rem;
+}
+
+/* Botones principales */
+#btn-add, #btn-add-prueba, #btn-add-lugar, 
+#btn-add-nivel, #btn-add-gincana {
+    background-color: yellow;
+    color: #000;
+    font-weight: bold;
+    margin: 20px 0;
+    box-shadow: 0 4px 15px rgba(255, 255, 0, 0.3);
+}
+
+#btn-add:hover, #btn-add-prueba:hover, #btn-add-lugar:hover,
+#btn-add-nivel:hover, #btn-add-gincana:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(255, 255, 0, 0.4);
+}
+
+/* Botones de acción */
+.btn-edit, .btn-edit-prueba, .btn-edit-lugar,
+.btn-edit-nivel, .btn-edit-gincana {
+    background-color: #0066cc;
+    color: white;
+    margin-right: 8px;
+}
+
+.btn-delete, .btn-delete-prueba, .btn-delete-lugar,
+.btn-delete-nivel, .btn-delete-gincana {
+    background-color: #cc0000;
+    color: white;
+}
+
+.btn-edit:hover, .btn-edit-prueba:hover, .btn-edit-lugar:hover,
+.btn-edit-nivel:hover, .btn-edit-gincana:hover {
+    background-color: #0055aa;
+    transform: scale(1.05);
+}
+
+.btn-delete:hover, .btn-delete-prueba:hover, .btn-delete-lugar:hover,
+.btn-delete-nivel:hover, .btn-delete-gincana:hover {
+    background-color: #aa0000;
+    transform: scale(1.05);
+}
+
+/* Botones de formulario */
+#save-btn, #save-prueba-btn, #save-lugar-btn,
+#save-nivel-btn, #save-gincana-btn,
+#edit-btn, #edit-prueba-btn, #edit-lugar-btn,
+#edit-nivel-btn, #edit-gincana-btn {
+    background-color: yellow;
+    color: #000;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+#save-btn:hover, #save-prueba-btn:hover, #save-lugar-btn:hover,
+#save-nivel-btn:hover, #save-gincana-btn:hover,
+#edit-btn:hover, #edit-prueba-btn:hover, #edit-lugar-btn:hover,
+#edit-nivel-btn:hover, #edit-gincana-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 0, 0.4);
+}
+
+/* Botones de cerrar modal */
+#close-modal, #close-modal-prueba, #close-modal-lugar,
+#close-modal-nivel, #close-modal-gincana,
+#close-modal-edit, #close-modal-edit-prueba, #close-modal-edit-lugar,
+#close-modal-edit-nivel, #close-modal-edit-gincana {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    color: #aaa;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+}
+
+#close-modal:hover, #close-modal-prueba:hover, #close-modal-lugar:hover,
+#close-modal-nivel:hover, #close-modal-gincana:hover,
+#close-modal-edit:hover, #close-modal-edit-prueba:hover, #close-modal-edit-lugar:hover,
+#close-modal-edit-nivel:hover, #close-modal-edit-gincana:hover {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: red;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Efecto hover para las filas de la tabla */
+tr {
+    transition: all 0.3s ease;
+}
+
+tr:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
 }
