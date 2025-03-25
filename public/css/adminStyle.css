@@ -1,5 +1,5 @@
 /* Estilo básico para todos los modales */
-#modal, #modal-edit, #modal-prueba, #modal-lugar, #modal-edit-lugar {
+#modal, #modal-edit, #modal-prueba, #modal-lugar, #modal-edit-lugar, #modal-nivel {
     position: fixed;
     top: 0;
     left: 0;

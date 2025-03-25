@@ -6,6 +6,8 @@ use App\Models\Usuario;
 use App\Models\Prueba; 
 use App\Models\Role;
 use App\Models\Lugar;
+use App\Models\Nivel;
+use App\Models\Gincana;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +23,9 @@ class AdminController extends Controller
             $roles = Role::all(); 
             $pruebas = Prueba::all();
             $lugares = Lugar::all();
-            return view('admin.index', compact('users','roles','pruebas','lugares')); 
+            $niveles = Nivel::all();
+            $gincanas = Gincana::all();
+            return view('admin.index', compact('users','roles','pruebas','lugares','niveles','gincanas')); 
         }
 
         // Si no es administrador, redirigir a la página principal con un mensaje de error

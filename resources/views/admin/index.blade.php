@@ -258,6 +258,82 @@
     </div>
 
 
+    <!--   ------------------------------ -->
+            <!-- CRUDS DE NIVELES -->
+    <!--   ------------------------------ -->
+
+    <h1>Lista de Niveles</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Lugar</th>
+                <th>Prueba</th>
+                <th>Gincana</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($niveles as $nivel)
+                <tr>
+                    <td>{{ $nivel->nombre }}</td>
+                    <td>{{ $nivel->lugares->pista }}</td>
+                    <td>{{ $nivel->prueba->pregunta }}</td>
+                    <td>{{ $nivel->gincana->nombre }}</td>
+                    <td>
+                        <form action="{{ route('niveles.destroy', $nivel->id) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <button id="btn-add-nivel">Añadir Nivel</button>
+
+    <!-- Modal para añadir un nuevo nivel -->
+    <div id="modal-nivel" style="display: none;">
+        <div class="modal-content">
+            <h2>Añadir Nivel</h2>
+
+            <form id="nivel-form" method="POST" action="{{ route('niveles.store') }}">
+                @csrf
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre" required>
+
+                <label for="id_lugar">Lugar</label>
+                <select id="id_lugar" name="id_lugar" required>
+                    @foreach($lugares as $lugar)
+                        <option value="{{ $lugar->id }}">{{ $lugar->pista }}</option>
+                    @endforeach
+                </select>
+
+                <label for="id_prueba">Prueba</label>
+                <select id="id_prueba" name="id_prueba" required>
+                    @foreach($pruebas as $prueba)
+                        <option value="{{ $prueba->id }}">{{ $prueba->pregunta }}</option>
+                    @endforeach
+                </select>
+
+                <label for="id_gincana">Gincana</label>
+                <select id="id_gincana" name="id_gincana" required>
+                    @foreach($gincanas as $gincana)
+                        <option value="{{ $gincana->id }}">{{ $gincana->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit">Guardar</button>
+            </form>
+
+            <button id="close-modal-nivel">Cerrar</button>
+        </div>
+    </div>
+
+
+
 
 
 
@@ -267,6 +343,7 @@
     <script src="{{ asset('js/deleteUser.js') }}"></script>
     <script src="{{ asset('js/managePrueba.js') }}"></script>
     <script src="{{ asset('js/manageLugar.js') }}"></script>
+    <script src="{{ asset('js/manageNivel.js') }}"></script>
 
 
 </body>

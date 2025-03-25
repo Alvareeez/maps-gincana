@@ -24,5 +24,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(LugaresSeeder::class);
 
+        $this->call(GincanasSeeder::class);
+
     }
 }
