@@ -56,9 +56,10 @@
     display: flex;
     gap: 1rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
-/* Botón de registro */
+/* Estilos comunes de los botones */
 .btn {
     padding: 12px 24px;
     font-size: 1.2rem;
@@ -68,9 +69,11 @@
     transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
 }
 
+/* Botón de Registro */
 .btn-register {
     background-color: yellow;
     color: black;
+    border: 2px solid yellow;
 }
 .btn-register:hover {
     background-color: #ffea00;
@@ -78,6 +81,7 @@
     box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
 }
 
+/* Botón de Login */
 .btn-login {
     background-color: black;
     color: yellow;
@@ -89,9 +93,74 @@
     box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
 }
 
+/* Botón Mapa */
+.btn-map {
+    background-color: black;
+    color: yellow;
+    border: 2px solid yellow;
+}
+.btn-map:hover {
+    background-color: #222;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+/* Botón Gincana */
+.btn-gincana {
+    background-color: black;
+    color: yellow;
+    border: 2px solid yellow;
+}
+.btn-gincana:hover {
+    background-color: #222;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+/* Botón de Admin */
+.btn-admin {
+    background-color: black;
+    color: yellow;
+    border: 2px solid yellow;
+}
+.btn-admin:hover {
+    background-color: #222;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+/* Botón de Logout */
+.btn-logout {
+    background-color: black;
+    color: yellow;
+    border: 2px solid yellow;
+}
+.btn-logout:hover {
+    background-color: #222;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
 /* Imágenes */
 .fade-image {
     width: 200px; /* Ajusta el tamaño de las imágenes */
     border-radius: 10px;
     margin-top: 20px;
+}
+
+/* Animación de deslizamiento de izquierda a derecha */
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Aplicamos la animación al botón de cerrar sesión */
+.slide-in {
+    animation: slideInFromLeft 1.5s ease-out forwards;
 }

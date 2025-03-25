@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('niveles', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre');
             $table->foreignId('id_lugar')->constrained('lugares')->onDelete('cascade');
             $table->foreignId('id_prueba')->constrained('pruebas')->onDelete('cascade');
             $table->foreignId('id_gincana')->constrained('gincanas')->onDelete('cascade');

@@ -3,8 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
-use App\Models\Usuario; // Asegúrate de usar el modelo correcto
+use App\Models\Usuario;
+use App\Models\Prueba;
+use App\Models\Lugar;
+use App\Models\Nivel;
 use Illuminate\Database\Seeder;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,10 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ejecutar el seeder para los roles
         $this->call(RolesSeeder::class);
 
-        // Ejecutar el seeder para los usuarios
         $this->call(UsuariosSeeder::class);
 
         // Ejecutar el seeder para los lugares destacados

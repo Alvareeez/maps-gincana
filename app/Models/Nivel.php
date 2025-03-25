@@ -8,6 +8,14 @@ class Nivel extends Model
 {
     protected $table = 'niveles';  // Nombre de la tabla
 
+    protected $fillable = [
+        'nombre',
+        'id_lugar',
+        'id_prueba',
+        'id_gincana',
+    ];
+
+
     public function lugar()
     {
         return $this->belongsTo(Lugar::class, 'id_lugar');  // Relación de muchos a uno con Lugar
