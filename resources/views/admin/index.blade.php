@@ -9,6 +9,22 @@
 </head>
 <body>
 
+    <!-- Navbar -->
+    <nav class="admin-navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo-link">
+                <img src="{{ asset('img/fondo_GA.png') }}" alt="Logo" class="navbar-logo">
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="#" class="nav-link" data-section="usuarios">Usuarios</a></li>
+                <li><a href="#" class="nav-link" data-section="pruebas">Pruebas</a></li>
+                <li><a href="#" class="nav-link" data-section="lugares">Lugares</a></li>
+                <li><a href="#" class="nav-link" data-section="niveles">Niveles</a></li>
+                <li><a href="#" class="nav-link" data-section="gincanas">Gincanas</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <h1>Lista de Usuarios</h1>
     <table>
         <thead>
