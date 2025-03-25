@@ -8,6 +8,12 @@ class Grupo extends Model
 {
     protected $table = 'grupos';  // Nombre de la tabla
 
+    protected $fillable = [
+        'nombre',
+        'id_gincana',
+        'nivel',
+    ];
+
     public function gincana()
     {
         return $this->belongsTo(Gincana::class, 'id_gincana');  // Relación de muchos a uno con Gincana
