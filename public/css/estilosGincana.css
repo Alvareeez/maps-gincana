@@ -1,0 +1,141 @@
+/* Estilos generales */
+body {
+    background: linear-gradient(270deg, #000 40%, #222 50%, #814d00 60%, #222 70%, #000 100%);
+    background-size: 400% 400%;
+    animation: backgroundAnimation 20s ease infinite;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding-top: 2rem;
+}
+
+/* Botones de gincanas */
+#contenedorGincanas a {
+    display: block;
+    background-color: rgb(255, 255, 255);
+    color: #FF9900;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 15px;
+    border: 3px solid #FF9900;
+    padding: 1.5rem 0;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 400px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#contenedorGincanas a:hover {
+    background-color: rgba(255, 153, 0, 0.2);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 153, 0, 0.7);
+}
+
+/* Texto informativo debajo de los botones */
+#contenedorGincanas p {
+    margin-top: 0.8rem;
+    font-size: 1rem;
+    color: #ccc;
+    text-align: center;
+}
+
+/* Animaciones */
+@keyframes backgroundAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 60%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilos para la animación de aparición */
+.gincana-btn {
+    animation: none;
+    opacity: 1;
+}
+
+/* Espaciado entre elementos */
+#contenedorGincanas .col-12 {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Mensajes de estado */
+.text-danger, .text-white {
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Contenedor del encabezado */
+header nav {
+    text-align: center;
+    margin-bottom: 3rem; /* Margen inferior general */
+}
+
+/* Estilo del título principal */
+header .header-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 153, 0, 0.7);
+    letter-spacing: 1px;
+    margin-bottom: 2rem; /* Separación del botón */
+}
+
+/* Contenedor del botón "Volver atrás" */
+header .back-button-container {
+    margin-top: 2rem; /* Separación del título */
+    margin-bottom: 2rem; /* Espacio inferior opcional */
+    text-align: center;
+}
+
+/* Estilo del botón */
+header .back-button {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #FF9900;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 30px;
+    border: 2px solid #FF9900;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Efecto hover del botón */
+header .back-button:hover {
+    background-color: rgba(255, 153, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+    color: #ffcc00;
+    border-color: #ffcc00;
+}
+
+/* Para pantallas pequeñas */
+@media (max-width: 768px) {
+    header nav {
+        font-size: 2.5rem;
+        margin-top: 1.5rem;
+    }
+}
+
+/* Efecto sutil de actualización */
+.actualizando {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+/* Restaurar opacidad después de actualizar */
+#contenedorGincanas {
+    transition: opacity 0.5s;
+}

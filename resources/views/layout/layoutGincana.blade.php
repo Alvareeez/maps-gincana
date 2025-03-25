@@ -16,7 +16,14 @@
 <body>
     <header>
         <nav>
-            @yield('headerTitle')
+        <!-- Botón "Volver atrás" -->
+        <div class="back-button-container">
+            <a href="{{ route('home') }}" class="back-button">Volver atrás</a>
+        </div>
+        <!-- Título principal -->
+        <div class="header-title">
+            @yield('headerTitle') <!-- Aquí va tu título dinámico -->
+        </div>
         </nav>
     </header>
 
