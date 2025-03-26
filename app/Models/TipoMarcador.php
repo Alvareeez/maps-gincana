@@ -13,6 +13,6 @@ class TipoMarcador extends Model
     protected $fillable = ['nombre', 'icono'];
     public function lugares()
     {
-        return $this->hasMany(LugarDestacado::class, 'tipoMarcador');
+        return $this->hasMany(LugarDestacado::class, 'tipo_marcador_id');
     }
 }

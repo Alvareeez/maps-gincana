@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LugarDestacado;
-use App\Models\Etiqueta;
+use App\Models\Favorito;
 use Illuminate\Http\Request;
 
 class LugarDestacadoController extends Controller
@@ -128,5 +128,51 @@ class LugarDestacadoController extends Controller
     {
         $lugar = LugarDestacado::with('etiquetas')->findOrFail($id);
         return response()->json($lugar);
+    }
+    public function addToFavorites(Request $request)
+    {
+        $request->validate([
+            'lugar_destacado_id' => 'required|exists:lugares_destacados,id',
+            'tipoMarcador' => 'required|exists:tipo_marcador,id' // Cambiado a required
+        ]);
+
+        try {
+            $idListaFija = 1; // ID de lista predeterminada
+
+            // Verifica si existe la lista predeterminada
+            // if (!Lista::find($idListaFija)) {
+            //     throw new \Exception('La lista predeterminada no existe');
+            // }
+
+            // Verificar si ya existe
+            if (Favorito::where('id_lista', $idListaFija)
+                ->where('lugar_destacado_id', $request->lugar_destacado_id)
+                ->exists()
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este lugar ya está en tus favoritos'
+                ], 409);
+            }
+
+            $favorito = Favorito::create([
+                'lugar_destacado_id' => $request->lugar_destacado_id,
+                'id_lista' => $idListaFija,
+                'tipoMarcador' => $request->tipoMarcador
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lugar añadido a favoritos',
+                'data' => $favorito
+            ]);
+        } catch (\Exception $e) {
+            // \Log::error('Error en addToFavorites: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al añadir a favoritos: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
