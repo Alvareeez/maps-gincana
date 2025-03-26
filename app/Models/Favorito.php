@@ -14,17 +14,22 @@ class Favorito extends Model
     protected $fillable = [
         'id_lista',
         'lugar_destacado_id',
-        'tipoMarcador',
+        'tipoMarcador' // Mantenemos este nombre para coincidir con la migración
     ];
-    
+
     public function lista()
     {
         return $this->belongsTo(Lista::class, 'id_lista');
     }
 
-    // Relación con LugarDestacado
     public function lugarDestacado()
     {
         return $this->belongsTo(LugarDestacado::class, 'lugar_destacado_id');
+    }
+
+    // Añade esta relación
+    public function tipoMarcador()
+    {
+        return $this->belongsTo(TipoMarcador::class, 'tipoMarcador');
     }
 }
