@@ -13,11 +13,11 @@ class TipoMarcadorSeeder extends Seeder
     public function run(): void
     {
         DB::table('tipo_marcador')->insert([
-            ['nombre' => 'COLEGIO', 'icono' => null],
-            ['nombre' => 'RESTAURANTE', 'icono' => null],
-            ['nombre' => 'PARQUE', 'icono' => null],
-            ['nombre' => 'CAFETERIA', 'icono' => null],
-            ['nombre' => 'HOTEL', 'icono' => null],
+            ['nombre' => 'EDIFICIO', 'icono' => null],
+            ['nombre' => 'OCIO', 'icono' => null],
+            ['nombre' => 'REPOSTERIA', 'icono' => null],
+            ['nombre' => 'DEPORTES', 'icono' => null],
+            ['nombre' => 'INTERES', 'icono' => null],
         ]);
     }
 }

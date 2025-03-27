@@ -50,7 +50,9 @@ Route::delete('/lugares-destacados/{id}', [LugarDestacadoController::class, 'des
 Route::get('/lugares-destacados-con-relaciones', [LugarDestacadoController::class, 'indexWithRelations']);
 // Route::post('/lugares-destacados/favoritos', [LugarDestacadoController::class, 'addToFavorites']);
 Route::post('/lugares-destacados/favoritos', [LugarDestacadoController::class, 'addToFavorites'])->name('lugares.favoritos');
-Route::get('/listas', [ListaController::class, 'index']);
+// Route::get('/listas', [ListaController::class, 'index']);
+Route::delete('/lugares-destacados/favoritos/{id}', [LugarDestacadoController::class, 'quitarDeFavoritos'])
+    ->name('lugares.favoritos.quitar');
 Route::post('/lugares-destacados/favoritos', [LugarDestacadoController::class, 'addToFavorites']);
 // ------------------------------------------------------------------------------------------------------
 

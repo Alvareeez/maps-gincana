@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(UsuariosSeeder::class);
 
-        // Ejecutar el seeder para los lugares destacados
         $this->call(TipoMarcadorSeeder::class);
+
+        $this->call(Etiqueta::class);
     }
 }
