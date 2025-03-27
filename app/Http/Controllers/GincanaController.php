@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gincana;
 use App\Models\Grupo;
 use App\Models\Jugador;
+use App\Models\Nivel;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -400,7 +401,7 @@ class GincanaController extends Controller
     public function update(Request $request, $id)
     {
         $gincana = Gincana::findOrFail($id);
-
+    
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'estado' => 'required|in:abierta,ocupada',
@@ -408,24 +409,29 @@ class GincanaController extends Controller
             'cantidad_grupos' => 'required|integer|min:1',
             'id_ganador' => 'nullable|exists:grupos,id'
         ]);
-
-        // Si cambia el número de grupos, actualizamos
-        if ($gincana->cantidad_grupos != $validated['cantidad_grupos']) {
-            DB::transaction(function () use ($gincana, $validated) {
-                // Eliminar grupos existentes
-                $gincana->grupos()->delete();
-                
-                // Actualizar gincana
-                $gincana->update($validated);
-                
-                // Crear nuevos grupos
-                $this->crearGruposParaGincana($gincana);
-            });
-        } else {
-            // Solo actualizar si no cambió el número de grupos
+    
+        DB::transaction(function () use ($gincana, $validated) {
+            // Guardar la cantidad actual de grupos
+            $cantidadActual = $gincana->cantidad_grupos;
+            $nuevaCantidad = $validated['cantidad_grupos'];
+            
+            // Actualizar los datos de la gincana
             $gincana->update($validated);
-        }
-
+            
+            // Manejar cambios en la cantidad de grupos
+            if ($nuevaCantidad != $cantidadActual) {
+                $gruposActuales = $gincana->grupos()->count();
+                
+                if ($nuevaCantidad > $gruposActuales) {
+                    // Crear los grupos adicionales necesarios
+                    $this->crearGruposAdicionales($gincana, $gruposActuales, $nuevaCantidad);
+                } elseif ($nuevaCantidad < $gruposActuales) {
+                    // Eliminar los grupos sobrantes (los más nuevos primero)
+                    $this->eliminarGruposSobrantes($gincana, $nuevaCantidad);
+                }
+            }
+        });
+    
         return response()->json([
             'success' => true,
             'message' => 'Gincana actualizada correctamente',
@@ -433,22 +439,88 @@ class GincanaController extends Controller
         ]);
     }
 
+    protected function crearGruposAdicionales(Gincana $gincana, $cantidadActual, $nuevaCantidad)
+    {
+        // Obtener el número más alto actual de grupo
+        $ultimoNumero = $gincana->grupos()
+            ->orderByRaw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED) DESC')
+            ->value(DB::raw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED)'));
+        
+        $numeroInicial = $ultimoNumero ? $ultimoNumero + 1 : $cantidadActual + 1;
+        $grupos = [];
+        
+        for ($i = $numeroInicial; $i <= $numeroInicial + ($nuevaCantidad - $cantidadActual) - 1; $i++) {
+            $grupos[] = [
+                'nombre' => 'Grupo '.$i,
+                'nivel' => 0,
+                'id_gincana' => $gincana->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+        
+        Grupo::insert($grupos);
+    }
+
+    protected function eliminarGruposSobrantes(Gincana $gincana, $nuevaCantidad)
+    {
+        // Obtener los grupos ordenados por el número en el nombre (de mayor a menor)
+        $gruposAEliminar = $gincana->grupos()
+            ->orderByRaw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED) ASC') // Extrae el número del nombre "Grupo X"
+            ->skip($nuevaCantidad)
+            ->take(PHP_INT_MAX)
+            ->get();
+        
+        // Primero eliminamos los grupos que no tienen jugadores (los más nuevos)
+        $gruposSinJugadores = $gruposAEliminar->filter(function($grupo) {
+            return $grupo->jugadores()->count() === 0;
+        });
+        
+        if ($gruposSinJugadores->isNotEmpty()) {
+            Grupo::whereIn('id', $gruposSinJugadores->pluck('id'))->delete();
+        }
+        
+        // Si todavía necesitamos eliminar más grupos para llegar a la cantidad deseada
+        $eliminados = $gruposSinJugadores->count();
+        $necesariosEliminar = $gruposAEliminar->count() - $nuevaCantidad;
+        
+        if ($eliminados < $necesariosEliminar) {
+            $gruposRestantes = $gruposAEliminar->whereNotIn('id', $gruposSinJugadores->pluck('id'))
+                ->sortByDesc(function($grupo) {
+                    return (int) str_replace('Grupo ', '', $grupo->nombre);
+                })
+                ->take($necesariosEliminar - $eliminados);
+            
+            // Eliminar jugadores de estos grupos primero
+            Jugador::whereIn('id_grupo', $gruposRestantes->pluck('id'))->delete();
+            
+            // Luego eliminar los grupos
+            Grupo::whereIn('id', $gruposRestantes->pluck('id'))->delete();
+        }
+    }
+
+
     public function destroy($id)
     {
         $gincana = Gincana::findOrFail($id);
         
-        // Eliminar en transacción para asegurar integridad
         DB::transaction(function () use ($gincana) {
-            // Primero eliminamos los grupos asociados
+            // 1. Eliminar jugadores de los grupos de esta gincana
+            Jugador::whereIn('id_grupo', $gincana->grupos()->pluck('id'))->delete();
+            
+            // 2. Eliminar los grupos asociados
             $gincana->grupos()->delete();
             
-            // Luego eliminamos la gincana
+            // 3. Eliminar los niveles asociados (aunque en la migración tienes onDelete('cascade'))
+            Nivel::where('id_gincana', $gincana->id)->delete();
+            
+            // 4. Finalmente eliminar la gincana
             $gincana->delete();
         });
-
+    
         return response()->json([
             'success' => true,
-            'message' => 'Gincana y sus grupos eliminados correctamente'
+            'message' => 'Gincana eliminada completamente con todos sus grupos, jugadores y niveles'
         ]);
     }
 
