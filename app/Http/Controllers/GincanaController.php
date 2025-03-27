@@ -348,10 +348,15 @@ class GincanaController extends Controller
 
     protected function crearGruposAdicionales(Gincana $gincana, $cantidadActual, $nuevaCantidad)
     {
-        $grupos = [];
-        $numeroInicial = $cantidadActual + 1;
+        // Obtener el número más alto actual de grupo
+        $ultimoNumero = $gincana->grupos()
+            ->orderByRaw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED) DESC')
+            ->value(DB::raw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED)'));
         
-        for ($i = $numeroInicial; $i <= $nuevaCantidad; $i++) {
+        $numeroInicial = $ultimoNumero ? $ultimoNumero + 1 : $cantidadActual + 1;
+        $grupos = [];
+        
+        for ($i = $numeroInicial; $i <= $numeroInicial + ($nuevaCantidad - $cantidadActual) - 1; $i++) {
             $grupos[] = [
                 'nombre' => 'Grupo '.$i,
                 'nivel' => 0,
@@ -366,19 +371,38 @@ class GincanaController extends Controller
 
     protected function eliminarGruposSobrantes(Gincana $gincana, $nuevaCantidad)
     {
-        // Obtener los IDs de los grupos a eliminar (los más nuevos primero)
+        // Obtener los grupos ordenados por el número en el nombre (de mayor a menor)
         $gruposAEliminar = $gincana->grupos()
-            ->orderBy('id', 'desc')
+            ->orderByRaw('CAST(SUBSTRING(nombre, 7) AS UNSIGNED) ASC') // Extrae el número del nombre "Grupo X"
             ->skip($nuevaCantidad)
             ->take(PHP_INT_MAX)
-            ->pluck('id');
+            ->get();
         
-        if ($gruposAEliminar->isNotEmpty()) {
+        // Primero eliminamos los grupos que no tienen jugadores (los más nuevos)
+        $gruposSinJugadores = $gruposAEliminar->filter(function($grupo) {
+            return $grupo->jugadores()->count() === 0;
+        });
+        
+        if ($gruposSinJugadores->isNotEmpty()) {
+            Grupo::whereIn('id', $gruposSinJugadores->pluck('id'))->delete();
+        }
+        
+        // Si todavía necesitamos eliminar más grupos para llegar a la cantidad deseada
+        $eliminados = $gruposSinJugadores->count();
+        $necesariosEliminar = $gruposAEliminar->count() - $nuevaCantidad;
+        
+        if ($eliminados < $necesariosEliminar) {
+            $gruposRestantes = $gruposAEliminar->whereNotIn('id', $gruposSinJugadores->pluck('id'))
+                ->sortByDesc(function($grupo) {
+                    return (int) str_replace('Grupo ', '', $grupo->nombre);
+                })
+                ->take($necesariosEliminar - $eliminados);
+            
             // Eliminar jugadores de estos grupos primero
-            Jugador::whereIn('id_grupo', $gruposAEliminar)->delete();
+            Jugador::whereIn('id_grupo', $gruposRestantes->pluck('id'))->delete();
             
             // Luego eliminar los grupos
-            Grupo::whereIn('id', $gruposAEliminar)->delete();
+            Grupo::whereIn('id', $gruposRestantes->pluck('id'))->delete();
         }
     }
 
