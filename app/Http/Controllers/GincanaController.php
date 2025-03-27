@@ -308,7 +308,7 @@ class GincanaController extends Controller
     public function update(Request $request, $id)
     {
         $gincana = Gincana::findOrFail($id);
-
+    
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'estado' => 'required|in:abierta,ocupada',
@@ -316,30 +316,72 @@ class GincanaController extends Controller
             'cantidad_grupos' => 'required|integer|min:1',
             'id_ganador' => 'nullable|exists:grupos,id'
         ]);
-
-        // Si cambia el número de grupos, actualizamos
-        if ($gincana->cantidad_grupos != $validated['cantidad_grupos']) {
-            DB::transaction(function () use ($gincana, $validated) {
-                // Eliminar grupos existentes
-                $gincana->grupos()->delete();
-                
-                // Actualizar gincana
-                $gincana->update($validated);
-                
-                // Crear nuevos grupos
-                $this->crearGruposParaGincana($gincana);
-            });
-        } else {
-            // Solo actualizar si no cambió el número de grupos
+    
+        DB::transaction(function () use ($gincana, $validated) {
+            // Guardar la cantidad actual de grupos
+            $cantidadActual = $gincana->cantidad_grupos;
+            $nuevaCantidad = $validated['cantidad_grupos'];
+            
+            // Actualizar los datos de la gincana
             $gincana->update($validated);
-        }
-
+            
+            // Manejar cambios en la cantidad de grupos
+            if ($nuevaCantidad != $cantidadActual) {
+                $gruposActuales = $gincana->grupos()->count();
+                
+                if ($nuevaCantidad > $gruposActuales) {
+                    // Crear los grupos adicionales necesarios
+                    $this->crearGruposAdicionales($gincana, $gruposActuales, $nuevaCantidad);
+                } elseif ($nuevaCantidad < $gruposActuales) {
+                    // Eliminar los grupos sobrantes (los más nuevos primero)
+                    $this->eliminarGruposSobrantes($gincana, $nuevaCantidad);
+                }
+            }
+        });
+    
         return response()->json([
             'success' => true,
             'message' => 'Gincana actualizada correctamente',
             'data' => $gincana->load('grupos')
         ]);
     }
+
+    protected function crearGruposAdicionales(Gincana $gincana, $cantidadActual, $nuevaCantidad)
+    {
+        $grupos = [];
+        $numeroInicial = $cantidadActual + 1;
+        
+        for ($i = $numeroInicial; $i <= $nuevaCantidad; $i++) {
+            $grupos[] = [
+                'nombre' => 'Grupo '.$i,
+                'nivel' => 0,
+                'id_gincana' => $gincana->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+        
+        Grupo::insert($grupos);
+    }
+
+    protected function eliminarGruposSobrantes(Gincana $gincana, $nuevaCantidad)
+    {
+        // Obtener los IDs de los grupos a eliminar (los más nuevos primero)
+        $gruposAEliminar = $gincana->grupos()
+            ->orderBy('id', 'desc')
+            ->skip($nuevaCantidad)
+            ->take(PHP_INT_MAX)
+            ->pluck('id');
+        
+        if ($gruposAEliminar->isNotEmpty()) {
+            // Eliminar jugadores de estos grupos primero
+            Jugador::whereIn('id_grupo', $gruposAEliminar)->delete();
+            
+            // Luego eliminar los grupos
+            Grupo::whereIn('id', $gruposAEliminar)->delete();
+        }
+    }
+
 
     public function destroy($id)
     {
