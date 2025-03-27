@@ -46,18 +46,32 @@ function cargarLugaresDestacados() {
         .then(response => response.json())
         .then(lugares => {
             lugares.forEach(lugar => {
-                // Crear un marcador para cada lugar destacado
-                var marker = L.marker([lugar.latitud, lugar.longitud]).addTo(map);
+                // Verificar si el lugar está en favoritos
+                const esFavorito = lugar.esFavorito || false;
 
-                // Crear el contenido del popup con un botón de eliminar
+                // Crear icono personalizado basado en el tipoMarcador
+                const icono = L.icon({
+                    iconUrl: lugar.tipoMarcador?.icono || '/img/marker-default.png',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+
+                // Crear un marcador para cada lugar destacado con el icono personalizado
+                var marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
+
+                // Crear el contenido del popup con los botones correspondientes
                 var popupContent = `
-                    <b>${lugar.nombre}</b><br>
-                    ${lugar.descripcion}<br>
-                    Dirección: ${lugar.direccion}<br>
-                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
-                    <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
-                    <button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>
+                <b>${lugar.nombre}</b><br>
+                ${lugar.descripcion}<br>
+                Dirección: ${lugar.direccion}<br>
+                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
+                <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
+                <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                ${esFavorito
+                        ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                    }
                 `;
 
                 // Asignar el popup al marcador
@@ -70,7 +84,9 @@ function cargarLugaresDestacados() {
                     direccion: lugar.direccion,
                     latitud: lugar.latitud,
                     longitud: lugar.longitud,
-                    marker: marker
+                    marker: marker,
+                    esFavorito: esFavorito,
+                    tipoMarcador: lugar.tipoMarcador || null
                 });
             });
         })
@@ -253,11 +269,17 @@ function buscarLugar(query) {
 
                     // Crear el contenido del popup con un botón de eliminar
                     var popupContent = `
-                        <b>${lugar.nombre}</b><br>
-                        ${lugar.descripcion}<br>
-                        Dirección: ${lugar.direccion}<br>
-                        <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
-                    `;
+                    <b>${lugar.nombre}</b><br>
+                    ${lugar.descripcion}<br>
+                    Dirección: ${lugar.direccion}<br>
+                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
+                    <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
+                    <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                    ${lugar.esFavorito
+                            ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                            : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                        }
+                `;
 
                     // Asignar el popup al marcador
                     marker.bindPopup(popupContent);
@@ -275,7 +297,9 @@ function buscarLugar(query) {
                         direccion: lugar.direccion,
                         latitud: lugar.latitud,
                         longitud: lugar.longitud,
-                        marker: marker
+                        marker: marker,
+                        esFavorito: lugar.esFavorito || false,  // ✨ Añadir esta línea
+                        tipoMarcador: lugar.tipoMarcador || null  // ✨ Añadir esta línea
                     });
                 });
             } else {
@@ -315,38 +339,151 @@ async function crearFiltroEtiquetas() {
     filtroContainer.className = 'filtro-etiquetas';
     filtroContainer.style.position = 'absolute';
     filtroContainer.style.top = '65px';
-    filtroContainer.style.right = '245px';
+    filtroContainer.style.right = '170px';
     filtroContainer.style.zIndex = '1000';
     filtroContainer.style.backgroundColor = 'white';
     filtroContainer.style.padding = '5px';
     filtroContainer.style.borderRadius = '5px';
     filtroContainer.style.boxShadow = '0 0 10px rgba(0,0,0,0.2)';
+    filtroContainer.style.display = 'flex';
+    filtroContainer.style.gap = '0px';
 
     filtroContainer.innerHTML = `
         <select id="filtro-etiqueta" class="form-select form-select-sm">
-            <option value="">Todas las etiquetas</option>
+            <option value="">Etiquetas</option>
             ${opcionesEtiquetas}
+        </select>
+        <select id="filtro-favoritos" class="form-select form-select-sm">
+            <option value="">Todos</option>
+            <option value="true">Solo favoritos</option>
+            <option value="false">No favoritos</option>
         </select>
     `;
 
     document.getElementById('map').appendChild(filtroContainer);
 
-    // Prevenir la propagación del evento clic en el contenedor y el select
+    // Prevenir la propagación del evento clic
     filtroContainer.addEventListener('click', function (e) {
         e.stopPropagation();
     });
 
-    document.getElementById('filtro-etiqueta').addEventListener('click', function (e) {
-        e.stopPropagation();
+    // Eventos para filtrar cuando cambia la selección
+    document.getElementById('filtro-etiqueta').addEventListener('change', function () {
+        aplicarFiltros();
     });
 
-    // Evento para filtrar cuando cambia la selección
-    document.getElementById('filtro-etiqueta').addEventListener('change', function () {
-        const etiquetaId = this.value;
-        filtrarPorEtiqueta(etiquetaId);
+    document.getElementById('filtro-favoritos').addEventListener('change', function () {
+        aplicarFiltros();
     });
 }
 
+function aplicarFiltros() {
+    const etiquetaId = document.getElementById('filtro-etiqueta').value;
+    const favoritos = document.getElementById('filtro-favoritos').value;
+
+    // Limpiar marcadores existentes
+    lugaresDestacados.forEach(lugar => {
+        if (lugar.marker) {
+            map.removeLayer(lugar.marker);
+        }
+    });
+    lugaresDestacados = [];
+
+    // Mostrar carga mientras se obtienen los datos
+    Swal.fire({
+        title: 'Cargando lugares...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Construir URL de consulta
+    let url = '/lugares-destacados?';
+    if (etiquetaId) {
+        url += `etiqueta=${etiquetaId}&`;
+    }
+    if (favoritos) {
+        url += `favoritos=${favoritos}`;
+    }
+
+    fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la respuesta del servidor');
+                });
+            }
+            return response.json();
+        })
+        .then(lugares => {
+            Swal.close();
+
+            if (lugares.error) {
+                throw new Error(lugares.message);
+            }
+
+            lugares.forEach(lugar => {
+                // Crear icono personalizado
+                const icono = L.icon({
+                    iconUrl: lugar.tipoMarcador?.icono || '/img/marker-default.png',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+
+                // Crear marcador con el icono personalizado
+                const marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
+
+                // Obtener nombres de etiquetas si existen
+                const etiquetasNames = lugar.etiquetas
+                    ? lugar.etiquetas.map(e => e.nombre).join(', ')
+                    : 'Sin etiquetas';
+
+                // Crear contenido del popup
+                const popupContent = `
+                <b>${lugar.nombre}</b><br>
+                ${lugar.descripcion}<br>
+                <small>Etiquetas: ${etiquetasNames}</small><br>
+                Dirección: ${lugar.direccion}<br>
+                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                ${lugar.esFavorito
+                        ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                    }
+            `;
+
+                marker.bindPopup(popupContent);
+
+                lugaresDestacados.push({
+                    id: lugar.id,
+                    nombre: lugar.nombre,
+                    direccion: lugar.direccion,
+                    latitud: lugar.latitud,
+                    longitud: lugar.longitud,
+                    marker: marker,
+                    esFavorito: lugar.esFavorito || false,
+                    tipoMarcador: lugar.tipoMarcador || null
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error al filtrar lugares:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los lugares. Verifica la consola para más detalles.'
+            });
+        });
+}
 // Función para filtrar lugares por etiqueta
 function filtrarPorEtiqueta(etiquetaId) {
     // Limpiar marcadores existentes
@@ -404,15 +541,20 @@ function filtrarPorEtiqueta(etiquetaId) {
                     : 'Sin etiquetas';
 
                 // Crear contenido del popup
+                // Dentro de la función filtrarPorEtiqueta(), modifica la parte donde creas el popupContent:
                 const popupContent = `
-                <b>${lugar.nombre}</b><br>
-                ${lugar.descripcion}<br>
-                <small>Etiquetas: ${etiquetasNames}</small><br>
-                Dirección: ${lugar.direccion}<br>
-                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
-                <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
-                <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
-            `;
+                        <b>${lugar.nombre}</b><br>
+                        ${lugar.descripcion}<br>
+                        <small>Etiquetas: ${etiquetasNames}</small><br>
+                        Dirección: ${lugar.direccion}<br>
+                        <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                        <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                        ${lugar.esFavorito
+                        ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                    }
+`;
 
                 marker.bindPopup(popupContent);
 
@@ -422,7 +564,9 @@ function filtrarPorEtiqueta(etiquetaId) {
                     direccion: lugar.direccion,
                     latitud: lugar.latitud,
                     longitud: lugar.longitud,
-                    marker: marker
+                    marker: marker,
+                    esFavorito: lugar.esFavorito || false,  // ✨ Añadir esta línea
+                    tipoMarcador: lugar.tipoMarcador || null  // ✨ Añadir esta línea
                 });
             });
         })
@@ -445,7 +589,7 @@ function crearIconoMarcador(tipoMarcador) {
     });
 }
 function agregarAFavoritos(lugarId, tipoMarcadorId) {
-    const idListaPredeterminada = 1; // ID de lista fija
+    const idListaPredeterminada = 1;
 
     fetch('/lugares-destacados/favoritos', {
         method: 'POST',
@@ -461,7 +605,6 @@ function agregarAFavoritos(lugarId, tipoMarcadorId) {
         })
     })
         .then(async response => {
-            // Verificar si la respuesta es JSON
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 const errorText = await response.text();
@@ -478,6 +621,21 @@ function agregarAFavoritos(lugarId, tipoMarcadorId) {
                     timer: 2000,
                     showConfirmButton: false
                 });
+
+                // Actualizar el estado del lugar en la lista
+                const lugar = lugaresDestacados.find(l => l.id === lugarId);
+                if (lugar) {
+                    lugar.esFavorito = true;
+                    // Actualizar el popup inmediatamente
+                    const popup = lugar.marker.getPopup();
+                    let content = popup.getContent();
+                    // Reemplazar el botón de añadir por el de quitar
+                    content = content.replace(
+                        /<button class="btn btn-success[^>]*>Añadir a favoritos<\/button>/,
+                        `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugarId})">Quitar de favoritos</button>`
+                    );
+                    popup.setContent(content);
+                }
             } else {
                 throw new Error(data.message || 'Error al añadir a favoritos');
             }
@@ -490,6 +648,86 @@ function agregarAFavoritos(lugarId, tipoMarcadorId) {
                 text: error.message || 'No se pudo añadir a favoritos'
             });
         });
+}
+// Función para quitar un lugar de favoritos
+function quitarDeFavoritos(lugarId) {
+    fetch(`/lugares-destacados/favoritos/${lugarId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const errorText = await response.text();
+                throw new Error(`El servidor respondió con: ${errorText.substring(0, 100)}...`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Eliminado!',
+                    text: 'El lugar se ha quitado de tus favoritos',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                // Actualizar el estado del lugar en la lista
+                const lugar = lugaresDestacados.find(l => l.id === lugarId);
+                if (lugar) {
+                    lugar.esFavorito = false;
+                    // Actualizar el popup
+                    const popup = lugar.marker.getPopup();
+                    let content = popup.getContent();
+                    // Reemplazar el botón de quitar por el de añadir
+                    content = content.replace(
+                        /<button class="btn btn-warning[^>]*>Quitar de favoritos<\/button>/,
+                        `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugarId}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                    );
+                    popup.setContent(content);
+                }
+            } else {
+                throw new Error(data.message || 'Error al quitar de favoritos');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'No se pudo quitar de favoritos'
+            });
+        });
+}
+
+// Función para actualizar el botón de favoritos en el popup
+function actualizarBotonFavoritos(lugarId, esFavorito) {
+    const lugar = lugaresDestacados.find(l => l.id === lugarId);
+    if (lugar && lugar.marker) {
+        const popup = lugar.marker.getPopup();
+        let content = popup.getContent();
+
+        // Primero elimina cualquier botón de favoritos existente
+        content = content.replace(
+            /<button class="btn btn-(warning|success)[^>]*>(Quitar de|Añadir a) favoritos<\/button>/,
+            ''
+        );
+
+        // Luego añade el botón correspondiente
+        const botonFavoritos = esFavorito
+            ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugarId})">Quitar de favoritos</button>`
+            : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugarId}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`;
+
+        // Inserta el botón antes del primer </div> de cierre
+        content = content.replace('</div>', `${botonFavoritos}</div>`);
+
+        popup.setContent(content);
+        lugar.esFavorito = esFavorito;
+    }
 }
 // Cargar los lugares destacados al iniciar el mapa
 cargarLugaresDestacados();
