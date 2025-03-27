@@ -485,14 +485,6 @@
                 <label for="cantidad_grupos">Cantidad de Grupos</label>
                 <input type="number" id="cantidad_grupos" name="cantidad_grupos" min="1" required>
 
-                <label for="id_ganador">Grupo Ganador (opcional)</label>
-                <select id="id_ganador" name="id_ganador">
-                    <option value="">Seleccione un grupo ganador</option>
-                    @foreach($grupos as $grupo)
-                        <option value="{{ $grupo->id }}">{{ $grupo->nombre }}</option>
-                    @endforeach
-                </select>
-
                 <button type="submit" id="save-gincana-btn">Guardar</button>
             </form>
             <button id="close-modal-gincana">X</button>
@@ -522,14 +514,6 @@
 
                 <label for="edit-cantidad_grupos">Cantidad de Grupos</label>
                 <input type="number" id="edit-cantidad_grupos" name="cantidad_grupos" min="1" required>
-
-                <label for="edit-id_ganador">Grupo Ganador (opcional)</label>
-                <select id="edit-id_ganador" name="id_ganador">
-                    <option value="">Seleccione un grupo ganador</option>
-                    @foreach($grupos as $grupo)
-                        <option value="{{ $grupo->id }}">{{ $grupo->nombre }}</option>
-                    @endforeach
-                </select>
 
                 <button type="submit" id="edit-gincana-btn">Actualizar</button>
             </form>
