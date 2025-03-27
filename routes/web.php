@@ -125,8 +125,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/gincanas', [GincanaController::class, 'store'])->name('gincanas.store');
     Route::put('/gincanas/{gincana}', [GincanaController::class, 'update'])->name('gincanas.update');
     Route::delete('/gincanas/{gincana}', [GincanaController::class, 'destroy'])->name('gincanas.destroy');
-});
-
 
     // rutas para la gincana
     Route::prefix('gincana')->group(function () {
@@ -139,7 +137,9 @@ Route::middleware(['auth'])->group(function () {
         // APIs
         Route::get('/api/gincanasAbiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.api.gincanasAbiertas');
         Route::get('/api/gruposDisponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.api.gruposDisponibles');
+        Route::get('/api/estado-juego/{id}', [GincanaController::class, 'estadoJuego'])->name('gincana.api.estadoJuego');
 
         // Acciones
         Route::post('/api/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.api.unirse');
     });
+});

@@ -9,6 +9,7 @@ use App\Models\Jugador;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GincanaController extends Controller
 {
@@ -53,23 +54,26 @@ class GincanaController extends Controller
         // Recupera todas las gincanas que están abiertas
         public function obtenerGincanasAbiertas()
         {
+            // Obtener IDs de gincanas con exactamente 4 niveles
+            $gincanasValidas = DB::table('niveles')
+                ->select('id_gincana')
+                ->groupBy('id_gincana')
+                ->havingRaw('COUNT(*) = 4')
+                ->pluck('id_gincana');
+
+            // Obtener gincanas abiertas que están en esa lista
             $gincanas = Gincana::where('estado', 'abierta')
-            ->select('id', 'nombre', 'cantidad_jugadores', 'cantidad_grupos')
-            ->get();
+                ->whereIn('id', $gincanasValidas)
+                ->select('id', 'nombre', 'cantidad_jugadores', 'cantidad_grupos')
+                ->get();
 
-            if ($gincanas->isEmpty()) {
-                $resultado = [
-                    'estado' => 'no encontrado',
-                    'respuesta' => 'No se han encontrado gincanas abiertas.'
-                ];
-            } else {
-                $resultado = [
-                    'estado' => 'encontrado',
-                    'respuesta' => $gincanas
-                ];
-            }
-
-            return response()->json($resultado);
+            return response()->json([
+                'estado' => $gincanas->isEmpty() ? 'no encontrado' : 'encontrado',
+                'respuesta' => $gincanas->isEmpty() 
+                    ? 'No hay gincanas disponibles.' 
+                    : $gincanas,
+                'debug_gincanas_validas' => $gincanasValidas // Para diagnóstico
+            ]);
         }
 
         // Recupera la información de una gincana
@@ -95,15 +99,27 @@ class GincanaController extends Controller
         // Comprueba si la gincana existe o sigue abierta
         public function gincanaAbierta($id)
         {
-            $gincana = Gincana::find($id);
-            if ($gincana){
-                if ($gincana->estado === 'abierta'){
+            try {
+                $gincana = Gincana::find($id);
+                
+                if (!$gincana) {
+                    return 'no existe';
+                }
+
+                // Verificar que tenga exactamente 4 niveles
+                $countNiveles = DB::table('niveles')
+                    ->where('id_gincana', $id)
+                    ->count();
+
+                if ($gincana->estado === 'abierta' && $countNiveles === 4) {
                     return 'abierta';
                 } else {
                     return 'cerrada';
                 }
-            } else{
-                return 'no existe';
+
+            } catch (\Exception $e) {
+                // Log del error si es necesario
+                return 'cerrada';
             }
         }
 
@@ -227,6 +243,16 @@ class GincanaController extends Controller
 
                 DB::commit();
 
+                // Verificar si todos los grupos están completos
+                $grupo = Grupo::find($id_grupo);
+                $todosConectados = $this->verificarGruposCompletos($grupo->id_gincana);
+                
+                if ($todosConectados) {
+                    // Actualizar estado de la gincana
+                    Gincana::where('id', $grupo->id_gincana)
+                        ->update(['estado' => 'ocupada']);
+                }
+
                 // Redirigir a la página del juego
                 return redirect()->route('gincana.juego', ['id' => $grupo->id_gincana]);
 
@@ -263,6 +289,73 @@ class GincanaController extends Controller
             } catch (\Exception $e) {
                 DB::rollback();
                 return redirect()->route('gincana.menu')->with('error', 'Error al salir del grupo: ' . $e->getMessage());
+            }
+        }
+
+        // Verificar si todos los grupos están completos
+        public function verificarGruposCompletos($gincanaId)
+        {
+            $gincana = Gincana::findOrFail($gincanaId);
+            $grupos = Grupo::where('id_gincana', $gincanaId)->get();
+            
+            foreach ($grupos as $grupo) {
+                $jugadoresEnGrupo = Jugador::where('id_grupo', $grupo->id)->count();
+                if ($jugadoresEnGrupo < $gincana->cantidad_jugadores) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // API para verificar estado del juego
+        public function estadoJuego($gincanaId)
+        {
+            $jugador = Jugador::where('id_usuario', Auth::id())
+                ->whereHas('grupo', function($q) use ($gincanaId) {
+                    $q->where('id_gincana', $gincanaId);
+                })
+                ->first();
+            
+            if (!$jugador) {
+                return response()->json([
+                    'estado' => 'error',
+                    'mensaje' => 'No estás en esta gincana'
+                ], 403);
+            }
+            
+            $todosConectados = $this->verificarGruposCompletos($gincanaId);
+            
+            if ($todosConectados) {
+                // Actualizar estado de la gincana si no estaba ya actualizado
+                Gincana::where('id', $gincanaId)
+                    ->where('estado', 'abierta')
+                    ->update(['estado' => 'ocupada']);
+                    
+                return response()->json([
+                    'estado' => 'iniciado',
+                    'mensaje' => 'El juego ha comenzado!'
+                ]);
+            } else {
+                // Obtener información de los grupos para mostrar
+                $grupos = Grupo::where('id_gincana', $gincanaId)
+                    ->withCount('jugadores')
+                    ->get()
+                    ->map(function($grupo) use ($gincanaId, $jugador) {
+                        return [
+                            'id' => $grupo->id,
+                            'nombre' => $grupo->nombre,
+                            'jugadores' => $grupo->jugadores_count,
+                            'max_jugadores' => $grupo->gincana->cantidad_jugadores,
+                            'es_mi_grupo' => $grupo->id === $jugador->id_grupo
+                        ];
+                    });
+                    
+                return response()->json([
+                    'estado' => 'esperando',
+                    'grupos' => $grupos,
+                    'mensaje' => 'Esperando a que se unan todos los jugadores...'
+                ]);
             }
         }
 
