@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gincana;
 use App\Models\Grupo;
 use App\Models\Jugador;
+use App\Models\Nivel;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -344,18 +345,23 @@ class GincanaController extends Controller
     {
         $gincana = Gincana::findOrFail($id);
         
-        // Eliminar en transacción para asegurar integridad
         DB::transaction(function () use ($gincana) {
-            // Primero eliminamos los grupos asociados
+            // 1. Eliminar jugadores de los grupos de esta gincana
+            Jugador::whereIn('id_grupo', $gincana->grupos()->pluck('id'))->delete();
+            
+            // 2. Eliminar los grupos asociados
             $gincana->grupos()->delete();
             
-            // Luego eliminamos la gincana
+            // 3. Eliminar los niveles asociados (aunque en la migración tienes onDelete('cascade'))
+            Nivel::where('id_gincana', $gincana->id)->delete();
+            
+            // 4. Finalmente eliminar la gincana
             $gincana->delete();
         });
-
+    
         return response()->json([
             'success' => true,
-            'message' => 'Gincana y sus grupos eliminados correctamente'
+            'message' => 'Gincana eliminada completamente con todos sus grupos, jugadores y niveles'
         ]);
     }
 
