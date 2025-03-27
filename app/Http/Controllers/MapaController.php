@@ -11,4 +11,8 @@ class MapaController extends Controller
     {
         return view('mapa'); 
     }
+    public function indexx()
+    {
+        return view('mapaUser'); 
+    }
 }
