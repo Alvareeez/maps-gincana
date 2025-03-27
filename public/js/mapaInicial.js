@@ -57,7 +57,7 @@ function cargarLugaresDestacados() {
                     <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
                     <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
                     <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
-
+                    <button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>
                 `;
 
                 // Asignar el popup al marcador
@@ -443,6 +443,53 @@ function crearIconoMarcador(tipoMarcador) {
         iconAnchor: [16, 32],
         popupAnchor: [0, -32]
     });
+}
+function agregarAFavoritos(lugarId, tipoMarcadorId) {
+    const idListaPredeterminada = 1; // ID de lista fija
+
+    fetch('/lugares-destacados/favoritos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            lugar_destacado_id: lugarId,
+            tipoMarcador: tipoMarcadorId || 1,
+            id_lista: idListaPredeterminada
+        })
+    })
+        .then(async response => {
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const errorText = await response.text();
+                throw new Error(`El servidor respondió con: ${errorText.substring(0, 100)}...`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Añadido!',
+                    text: 'El lugar se ha añadido a tus favoritos',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                throw new Error(data.message || 'Error al añadir a favoritos');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'No se pudo añadir a favoritos'
+            });
+        });
 }
 // Cargar los lugares destacados al iniciar el mapa
 cargarLugaresDestacados();
