@@ -254,3 +254,67 @@ header .back-button:hover {
 .leaflet-top {
     z-index: 1000; /* Asegura que los controles del mapa estén sobre otros elementos */
 }
+
+/* Añade esto a tu archivo CSS */
+#mapa-container {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.leaflet-popup-content {
+    min-width: 200px;
+}
+
+.leaflet-popup-content button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.leaflet-top {
+    z-index: 1000;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Estilos para los modales */
+.modal-content {
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.modal-title {
+    font-weight: bold;
+    color: #212529;
+}
+
+/* Estilos para el marcador del jugador */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
+
+/* Estilos para el radio de visibilidad */
+.leaflet-overlay-pane svg path {
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}

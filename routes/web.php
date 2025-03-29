@@ -128,20 +128,24 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/gincanas/{gincana}', [GincanaController::class, 'update'])->name('gincanas.update');
     Route::delete('/gincanas/{gincana}', [GincanaController::class, 'destroy'])->name('gincanas.destroy');
 
-    // rutas para la gincana
+    // Rutas de gincana
     Route::prefix('gincana')->group(function () {
         // Vistas
         Route::get('/', [GincanaController::class, 'vistaGincanaMenu'])->name('gincana.menu');
         Route::get('/lobby/{id}', [GincanaController::class, 'vistaGincanaLobby'])->name('gincana.lobby');
         Route::get('/juego/{id}', [GincanaController::class, 'vistaGincanaJuego'])->name('gincana.juego');
-        Route::post('/salir', [GincanaController::class, 'salirGrupo'])->name('gincana.salir');
-
-        // APIs
-        Route::get('/api/gincanasAbiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.api.gincanasAbiertas');
-        Route::get('/api/gruposDisponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.api.gruposDisponibles');
-        Route::get('/api/estado-juego/{id}', [GincanaController::class, 'estadoJuego'])->name('gincana.api.estadoJuego');
-
+        
         // Acciones
-        Route::post('/api/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.api.unirse');
+        Route::post('/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.unirse');
+        Route::post('/salir', [GincanaController::class, 'salirGrupo'])->name('gincana.salir');
+        
+        // APIs
+        Route::prefix('api')->group(function () {
+            Route::get('/estado-juego/{id}', [GincanaController::class, 'estadoJuego']);
+            Route::get('/nivel-actual/{id}', [GincanaController::class, 'nivelActual']);
+            Route::post('/responder/{id}', [GincanaController::class, 'responderPrueba']);
+            Route::get('/gincanas-abiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.gincanas-abiertas');
+            Route::get('/grupos-disponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.grupos-disponibles');
+        });
     });
 });

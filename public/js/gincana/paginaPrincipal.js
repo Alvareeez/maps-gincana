@@ -32,15 +32,16 @@ async function actualizarGincanas() {
     ultimaActualizacion = ahora;
     
     const contenedorGincanas = document.getElementById('contenedorGincanas');
+    const gincanasUrl = contenedorGincanas.dataset.gincanasUrl;
     contenedorGincanas.classList.add('actualizando');
     
     try {
-        const response = await fetch('/gincana/api/gincanasAbiertas', {
+        const response = await fetch(gincanasUrl, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'Cache-Control': 'no-cache' // Evitar caché
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
         });
 
@@ -48,16 +49,16 @@ async function actualizarGincanas() {
             throw new Error(`Error HTTP: ${response.status}`);
         }
 
-        const data = await response.json();
+        const {success, data, message} = await response.json();
         
-        if (data.estado === 'error') {
-            throw new Error(data.respuesta || 'Error desconocido');
+        if (!success) {
+            throw new Error(message || 'Error al cargar gincanas');
         }
 
         let contenido = '';
         
-        if (data.estado === 'encontrado' && data.respuesta && data.respuesta.length > 0) {
-            contenido = data.respuesta.map(gincana => `
+        if (data && data.length > 0) {
+            contenido = data.map(gincana => `
                 <div class="col-12 col-md-6 col-lg-4 mb-3">
                     <a href="/gincana/lobby/${gincana.id}" 
                        class="btn btn-outline-warning btn-block py-3 gincana-btn"
@@ -72,7 +73,9 @@ async function actualizarGincanas() {
         } else {
             contenido = `
                 <div class="col-12">
-                    <p class="text-white">${data.respuesta || 'No hay gincanas disponibles'}</p>
+                    <div class="alert alert-info">
+                        ${message || 'No hay gincanas disponibles en este momento.'}
+                    </div>
                 </div>
             `;
         }
