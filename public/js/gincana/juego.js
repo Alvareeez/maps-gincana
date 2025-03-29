@@ -13,6 +13,11 @@ class JuegoGincana {
         this.init();
     }
 
+    ocultarLoader() {
+        const spinner = document.getElementById('spinner-respuesta');
+        if (spinner) spinner.classList.add('d-none');
+    }
+
     async init() {
         this.crearModales();
         await this.cargarEstadoJuego();
@@ -377,15 +382,20 @@ class JuegoGincana {
     async procesarRespuesta() {
         const respuestaInput = document.getElementById('respuesta-jugador');
         const respuesta = respuestaInput?.value.trim() || '';
+        const spinner = document.getElementById('spinner-respuesta');
+        const btnEnviar = document.getElementById('btn-enviar-respuesta');
         
+        // Validación básica
         if (!respuesta) {
             this.mostrarFeedback('Por favor ingresa una respuesta', 'warning');
             return;
         }
     
+        // Mostrar loading
+        if (spinner) spinner.classList.remove('d-none');
+        if (btnEnviar) btnEnviar.disabled = true;
+    
         try {
-            this.mostrarLoader('Verificando respuesta...');
-            
             const response = await fetch(`/gincana/api/responder/${this.gincanaId}`, {
                 method: 'POST',
                 headers: {
@@ -397,8 +407,11 @@ class JuegoGincana {
             
             const data = await response.json();
             
-            if (!response.ok) throw new Error(data.message || 'Error en la respuesta');
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            }
             
+            // Manejar diferentes respuestas
             if (data.completado) {
                 this.mostrarFinJuego(data.ganador);
             } 
@@ -415,9 +428,17 @@ class JuegoGincana {
             }
             
         } catch (error) {
+            console.error('Error al procesar respuesta:', error);
             this.mostrarFeedback(error.message, 'danger');
+            
+            // Si es error de servidor, sugerir recargar
+            if (error.message.includes('500')) {
+                this.mostrarFeedback('Error del servidor. Intenta recargar la página', 'danger');
+            }
         } finally {
-            this.ocultarLoader();
+            // Ocultar loading y habilitar botón
+            if (spinner) spinner.classList.add('d-none');
+            if (btnEnviar) btnEnviar.disabled = false;
         }
     }
 
@@ -667,13 +688,12 @@ class JuegoGincana {
     }
 
     mostrarLoader(mensaje) {
-        if (this.contenedorEstado) {
-            this.contenedorEstado.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-3 lead">${mensaje}</p>
+        const contenedor = document.getElementById('estado-juego');
+        if (contenedor) {
+            contenedor.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">${mensaje}</p>
                 </div>
             `;
         }

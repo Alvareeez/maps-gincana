@@ -532,14 +532,14 @@ class GincanaController extends Controller
             DB::commit();
             return response()->json([
                 'correcto' => true,
-                'message' => 'Respuesta correcta - Esperando al resto'
+                'message' => 'Respuesta procesada'
             ]);
             
         } catch (\Exception $e) {
-            DB::rollBack();
+            Log::error('Error en responderPrueba: ' . $e->getMessage());
             return response()->json([
                 'error' => true,
-                'message' => $e->getMessage()
+                'message' => 'Error al procesar respuesta'
             ], 500);
         }
     }
