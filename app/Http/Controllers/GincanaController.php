@@ -456,89 +456,91 @@ class GincanaController extends Controller
      */
     public function responderPrueba(Request $request, $gincanaId)
     {
-        $request->validate([
-            'respuesta' => 'required|string'
-        ]);
-
-        $jugador = Jugador::where('id_usuario', Auth::id())
-            ->whereHas('grupo', function($q) use ($gincanaId) {
-                $q->where('id_gincana', $gincanaId);
-            })
-            ->firstOrFail();
-
-        $grupo = $jugador->grupo;
-        $nivelActual = $grupo->nivel;
-
-        $nivel = Nivel::with(['prueba'])
-            ->where('id_gincana', $gincanaId)
-            ->where('nombre', 'Nivel '.$nivelActual)
-            ->firstOrFail();
-
         DB::beginTransaction();
         try {
+            // 1. Obtener jugador y grupo
+            $jugador = Jugador::with(['grupo.gincana'])
+                ->where('id_usuario', Auth::id())
+                ->firstOrFail();
+
+            $grupo = $jugador->grupo;
+            
+            // 2. Determinar nivel ACTUAL (el que están jugando)
+            $nivelJugando = $grupo->nivel + 1;
+            
+            // 3. Buscar la prueba del nivel actual
+            $nivel = Nivel::with(['prueba'])
+                ->where('id_gincana', $gincanaId)
+                ->where('nombre', 'Nivel '.$nivelJugando)
+                ->firstOrFail();
+            
+            // 4. Verificar respuesta
             $respuestaCorrecta = strtolower(trim($nivel->prueba->respuesta));
             $respuestaUsuario = strtolower(trim($request->respuesta));
             
-            if ($respuestaUsuario === $respuestaCorrecta) {
-                $jugador->completado = true;
-                $jugador->save();
+            if ($respuestaUsuario !== $respuestaCorrecta) {
+                return response()->json([
+                    'correcto' => false,
+                    'message' => 'Respuesta incorrecta'
+                ]);
+            }
+            
+            // 5. Marcar jugador como completado
+            $jugador->completado = true;
+            $jugador->save();
+            
+            // 6. Verificar si TODOS han respondido
+            $jugadoresCompletados = Jugador::where('id_grupo', $grupo->id)
+                ->where('completado', true)
+                ->count();
+            
+            $totalJugadores = $grupo->gincana->cantidad_jugadores;
+            
+            if ($jugadoresCompletados >= $totalJugadores) {
+                // 7. Avanzar nivel del grupo
+                $grupo->nivel = $nivelJugando;
+                $grupo->save();
                 
-                // Verificar si todos los jugadores han completado el nivel
-                $jugadoresCompletados = Jugador::where('id_grupo', $grupo->id)
-                    ->where('completado', true)
-                    ->count();
+                // 8. Reiniciar estado de todos los jugadores
+                Jugador::where('id_grupo', $grupo->id)
+                    ->update(['completado' => false]);
                 
-                $totalJugadores = $grupo->gincana->cantidad_jugadores;
+                // 9. Verificar si completaron todos los niveles
+                $totalNiveles = Nivel::where('id_gincana', $gincanaId)->count();
                 
-                if ($jugadoresCompletados >= $totalJugadores) {
-                    // Avanzar al siguiente nivel
-                    $nuevoNivel = $nivelActual + 1;
+                if ($nivelJugando >= $totalNiveles) {
+                    $grupo->gincana->estado = 'completada';
+                    $grupo->gincana->id_ganador = $grupo->id;
+                    $grupo->gincana->save();
                     
-                    // Verificar si es el último nivel
-                    $ultimoNivel = Nivel::where('id_gincana', $gincanaId)
-                        ->orderBy('nombre', 'desc')
-                        ->first();
-                    
-                    if ($nuevoNivel > (int) str_replace('Nivel ', '', $ultimoNivel->nombre)) {
-                        // Juego completado
-                        $grupo->gincana->estado = 'completada';
-                        $grupo->gincana->id_ganador = $grupo->id;
-                        $grupo->gincana->save();
-                        
-                        DB::commit();
-                        
-                        return response()->json([
-                            'estado' => 'completado',
-                            'ganador' => true
-                        ]);
-                    } else {
-                        // Avanzar al siguiente nivel
-                        $grupo->nivel = $nuevoNivel;
-                        $grupo->save();
-                        
-                        // Reiniciar estado de completado para todos los jugadores
-                        Jugador::where('id_grupo', $grupo->id)
-                            ->update(['completado' => false]);
-                        
-                        DB::commit();
-                        
-                        return response()->json([
-                            'estado' => 'nivel_completado',
-                            'nuevo_nivel' => $nuevoNivel
-                        ]);
-                    }
+                    DB::commit();
+                    return response()->json([
+                        'completado' => true,
+                        'ganador' => true,
+                        'message' => '¡Gincana completada!'
+                    ]);
                 }
                 
                 DB::commit();
-                return response()->json(['estado' => 'correcto', 'completado' => true]);
-            } else {
-                DB::commit();
-                return response()->json(['estado' => 'incorrecto', 'completado' => false]);
+                return response()->json([
+                    'nivel_completado' => true,
+                    'nuevo_nivel' => $nivelJugando + 1,
+                    'message' => '¡Nivel completado!'
+                ]);
             }
+            
+            DB::commit();
+            return response()->json([
+                'correcto' => true,
+                'message' => 'Respuesta correcta - Esperando al resto'
+            ]);
+            
         } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error en responderPrueba: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+            DB::rollBack();
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

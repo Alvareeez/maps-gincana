@@ -96,32 +96,66 @@ class JuegoGincana {
 
     async iniciarJuego() {
         try {
+            this.mostrarLoader('Cargando nivel actual...');
+            
+            // Obtener el estado actual del juego
             const response = await fetch(`/gincana/api/nivel-actual/${this.gincanaId}`);
-            if (!response.ok) throw new Error('Error al cargar nivel');
+            
+            if (!response.ok) {
+                throw new Error('Error al cargar el nivel actual');
+            }
             
             const data = await response.json();
             
+            // El nivel actual es el último completado + 1
+            this.nivelActual = data.nivel + 1;
+            
+            // Verificar si el juego ha terminado
             if (data.estado === 'completado') {
                 return this.mostrarFinJuego(data.ganador);
             }
             
-            this.nivelActual = data.nivel;
-            this.mostrarInterfazJuego(data);
+            // Validar que tenemos los datos necesarios
+            if (!data.pista || !data.pregunta || !data.ubicacion) {
+                throw new Error('Datos del nivel incompletos');
+            }
             
-            if (!data.ubicacion) throw new Error('Ubicación no válida');
+            // Actualizar la interfaz
+            this.mostrarInterfazJuego(data);
             
             // Actualizar modales
             document.getElementById('contenido-pista').textContent = data.pista;
             document.getElementById('texto-pregunta').textContent = data.pregunta;
             
-            // Inicializar mapa
+            // Inicializar mapa con la ubicación del objetivo
             this.inicializarMapa(data.ubicacion);
             
-            // Mostrar pista al inicio
-            setTimeout(() => this.modales.pista.show(), 1000);
+            // Mostrar pista al inicio después de un breve retraso
+            setTimeout(() => {
+                this.modales.pista.show();
+            }, 1000);
             
         } catch (error) {
-            this.mostrarError(`Error al iniciar juego: ${error.message}`);
+            console.error('Error al iniciar juego:', error);
+            
+            // Mostrar error específico para niveles no encontrados
+            if (error.message.includes('Nivel') && error.message.includes('no encontrado')) {
+                this.mostrarError(`
+                    <h5>Error en el nivel actual</h5>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.reload()" class="btn btn-warning mt-2">
+                        <i class="fas fa-sync-alt me-2"></i>Reintentar
+                    </button>
+                `);
+            } else {
+                this.mostrarError(`
+                    <h5>Error al iniciar el juego</h5>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.href='/gincana'" class="btn btn-danger mt-2">
+                        <i class="fas fa-home me-2"></i>Volver al menú
+                    </button>
+                `);
+            }
         }
     }
 
@@ -162,8 +196,8 @@ class JuegoGincana {
 
         const opcionesGPS = {
             enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
+            maximumAge: 30000,
+            timeout: 20000
         };
 
         navigator.geolocation.getCurrentPosition(
@@ -179,21 +213,31 @@ class JuegoGincana {
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy
         };
-
+    
         this.ultimaPosicion = jugadorCoords;
         
-        // Configurar mapa
-        this.mapa = L.map('mapa-container', {
-            zoomControl: false,
-            tap: false
-        }).setView([jugadorCoords.lat, jugadorCoords.lng], 16);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(this.mapa);
-
-        L.control.zoom({ position: 'topright' }).addTo(this.mapa);
-
+        // Limpiar el mapa completamente si ya existe
+        if (this.mapa) {
+            this.mapa.eachLayer(layer => {
+                this.mapa.removeLayer(layer);
+            });
+        } else {
+            // Crear nuevo mapa si no existe
+            this.mapa = L.map('mapa-container', {
+                zoomControl: false,
+                tap: false
+            }).setView([jugadorCoords.lat, jugadorCoords.lng], 16);
+    
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(this.mapa);
+    
+            L.control.zoom({ position: 'topright' }).addTo(this.mapa);
+        }
+    
+        // Reiniciar objeto de marcadores
+        this.marcadores = {};
+    
         // Marcador del jugador
         this.marcadores.jugador = L.marker([jugadorCoords.lat, jugadorCoords.lng], {
             icon: L.icon({
@@ -203,7 +247,7 @@ class JuegoGincana {
             }),
             zIndexOffset: 1000
         }).addTo(this.mapa).bindPopup('Tu ubicación actual');
-
+    
         // Círculo de precisión
         this.marcadores.precision = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
             radius: jugadorCoords.accuracy,
@@ -211,16 +255,16 @@ class JuegoGincana {
             fillColor: '#3388ff',
             fillOpacity: 0.2
         }).addTo(this.mapa);
-
-        // Radio visible (50m)
-        this.marcadores.radio = L.circle([objetivo.latitud, objetivo.longitud], {
+    
+        // Radio visible (50m) - alrededor del jugador
+        this.marcadores.radio = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
             radius: 50,
             color: '#ffc107',
             fillColor: '#ffc107',
             fillOpacity: 0.2,
             weight: 2
         }).addTo(this.mapa);
-
+    
         // Marcador del objetivo (inicialmente invisible)
         this.marcadores.objetivo = L.marker([objetivo.latitud, objetivo.longitud], {
             opacity: 0,
@@ -231,7 +275,7 @@ class JuegoGincana {
             }),
             zIndexOffset: 900
         }).addTo(this.mapa);
-
+    
         // Iniciar seguimiento
         this.iniciarSeguimientoPosicion(objetivo);
     }
@@ -258,7 +302,7 @@ class JuegoGincana {
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy
         };
-
+    
         this.ultimaPosicion = jugadorCoords;
         
         // Actualizar marcador y círculo de precisión
@@ -269,6 +313,11 @@ class JuegoGincana {
         if (this.marcadores.precision) {
             this.marcadores.precision.setLatLng([jugadorCoords.lat, jugadorCoords.lng])
                 .setRadius(jugadorCoords.accuracy);
+        }
+        
+        // Mover el círculo amarillo con el jugador
+        if (this.marcadores.radio) {
+            this.marcadores.radio.setLatLng([jugadorCoords.lat, jugadorCoords.lng]);
         }
         
         // Calcular distancia al objetivo
@@ -289,7 +338,12 @@ class JuegoGincana {
                             <i class="fas fa-question-circle me-1"></i>Responder pregunta
                         </button>
                     </div>
-                `).openPopup();
+                `);
+                
+                // Abrir automáticamente el popup cuando está en rango
+                if (!this.marcadores.objetivo.isPopupOpen()) {
+                    this.marcadores.objetivo.openPopup();
+                }
             } else {
                 this.marcadores.objetivo.setOpacity(0);
                 this.marcadores.objetivo.closePopup();
@@ -323,59 +377,47 @@ class JuegoGincana {
     async procesarRespuesta() {
         const respuestaInput = document.getElementById('respuesta-jugador');
         const respuesta = respuestaInput?.value.trim() || '';
-        const spinner = document.getElementById('spinner-respuesta');
-        const btnEnviar = document.getElementById('btn-enviar-respuesta');
         
         if (!respuesta) {
-            if (respuestaInput) respuestaInput.classList.add('is-invalid');
-            const feedback = document.getElementById('feedback-respuesta');
-            if (feedback) feedback.textContent = 'Por favor, introduce una respuesta';
+            this.mostrarFeedback('Por favor ingresa una respuesta', 'warning');
             return;
         }
-        
-        if (spinner) spinner.classList.remove('d-none');
-        if (btnEnviar) btnEnviar.disabled = true;
-        
+    
         try {
+            this.mostrarLoader('Verificando respuesta...');
+            
             const response = await fetch(`/gincana/api/responder/${this.gincanaId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ respuesta })
             });
             
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
-            
             const data = await response.json();
             
-            if (data.estado === 'correcto') {
-                this.mostrarFeedback('¡Respuesta correcta!', 'success');
-                this.modales.pregunta.hide();
-                
-                if (data.completado) {
-                    this.mostrarLoader('Esperando al resto del grupo...');
-                    setTimeout(() => this.iniciarJuego(), 5000);
-                }
-            } else if (data.estado === 'nivel_completado') {
-                this.mostrarFeedback('¡Nivel completado!', 'success');
-                this.modales.pregunta.hide();
-                this.mostrarLoader('Cargando siguiente nivel...');
-                setTimeout(() => this.iniciarJuego(), 3000);
-            } else if (data.estado === 'completado') {
+            if (!response.ok) throw new Error(data.message || 'Error en la respuesta');
+            
+            if (data.completado) {
                 this.mostrarFinJuego(data.ganador);
-            } else {
-                this.mostrarFeedback('Respuesta incorrecta', 'danger');
-                if (respuestaInput) respuestaInput.classList.add('is-invalid');
-                const feedback = document.getElementById('feedback-respuesta');
-                if (feedback) feedback.textContent = 'La respuesta no es correcta';
+            } 
+            else if (data.nivel_completado) {
+                this.mostrarFeedback('¡Nivel completado! Cargando siguiente...', 'success');
+                setTimeout(() => this.iniciarJuego(), 2000);
             }
+            else if (data.correcto) {
+                this.modales.pregunta.hide();
+                this.mostrarFeedback(data.message, 'success');
+            }
+            else {
+                this.mostrarFeedback(data.message, 'danger');
+            }
+            
         } catch (error) {
-            this.mostrarFeedback('Error al enviar respuesta', 'danger');
+            this.mostrarFeedback(error.message, 'danger');
         } finally {
-            if (spinner) spinner.classList.add('d-none');
-            if (btnEnviar) btnEnviar.disabled = false;
+            this.ocultarLoader();
         }
     }
 
@@ -510,7 +552,7 @@ class JuegoGincana {
             console.error('Contenedor del mapa no encontrado en modo fallback');
             return;
         }
-
+    
         this.mapa = L.map(mapaContainer, {
             zoomControl: false
         }).setView([coords.latitud, coords.longitud], 16);
@@ -522,7 +564,7 @@ class JuegoGincana {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(this.mapa);
-
+    
         L.popup()
             .setLatLng([coords.latitud, coords.longitud])
             .setContent(`
@@ -533,7 +575,8 @@ class JuegoGincana {
                 </div>
             `)
             .openOn(this.mapa);
-
+    
+        // Círculo amarillo alrededor del centro en modo fallback
         this.marcadores.radio = L.circle([coords.latitud, coords.longitud], {
             radius: 50,
             color: '#ffc107',
@@ -541,7 +584,8 @@ class JuegoGincana {
             fillOpacity: 0.2,
             weight: 2
         }).addTo(this.mapa);
-
+    
+        // Marcador del objetivo (siempre visible en modo fallback)
         this.marcadores.objetivo = L.marker([coords.latitud, coords.longitud], {
             icon: L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -675,12 +719,12 @@ class JuegoGincana {
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
         const Δλ = (lon2-lon1) * Math.PI/180;
-
+    
         const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
                 Math.cos(φ1) * Math.cos(φ2) *
                 Math.sin(Δλ/2) * Math.sin(Δλ/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
+    
         return R * c;
     }
 }

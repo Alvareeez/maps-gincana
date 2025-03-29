@@ -138,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
         // Acciones
         Route::post('/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.unirse');
         Route::post('/salir', [GincanaController::class, 'salirGrupo'])->name('gincana.salir');
+        Route::post('/responder/{id}', [GincanaController::class, 'responderPrueba']);
         
         // APIs
         Route::prefix('api')->group(function () {
