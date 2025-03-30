@@ -76,7 +76,9 @@ tr:hover {
 /* Modales */
 #modal, #modal-edit, #modal-prueba, #modal-lugar, 
 #modal-edit-lugar, #modal-nivel, #modal-edit-nivel,
-#modal-gincana, #modal-edit-gincana, #modal-lugar-destacado {
+#modal-gincana, #modal-edit-gincana, #modal-lugar-destacado, #modal-edit-lugar-destacado,
+#modal-etiqueta, #modal-edit-etiqueta, 
+#modal-tipo-marcador, #modal-edit-tipo-marcador {
     position: fixed;
     top: 0;
     left: 0;

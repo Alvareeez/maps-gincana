@@ -570,240 +570,179 @@
 
     <button id="btn-add-lugar-destacado">Añadir Lugar Destacado</button>
 
-    <!-- Modal para añadir -->
-    <div id="modal-lugar-destacado" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-modal" id="close-modal-lugar-destacado">&times;</span>
-            <h2 id="modal-title-lugar-destacado">Añadir Lugar Destacado</h2>
-            <form id="lugar-destacado-form">
-                @csrf
-                <input type="hidden" id="lugar-destacado-id" name="id">
-
-                <div class="form-group">
-                    <label for="nombre-lugar-destacado">Nombre</label>
-                    <input type="text" id="nombre-lugar-destacado" name="nombre" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="descripcion">Descripción</label>
-                    <textarea id="descripcion" name="descripcion" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="direccion">Dirección</label>
-                    <input type="text" id="direccion" name="direccion" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="latitud">Latitud</label>
-                    <input type="number" id="create-latitud" name="latitud" step="0.000001" required>
-                    </div>
-
-                <div class="form-group">
-                    <label for="longitud">Longitud</label>
-                    <input type="number" id="longitudDestacada" name="longitud" step="0.000001" required>
-                    </div>
-
-                <div class="form-group">
-                    <label for="tipoMarcador">Tipo Marcador</label>
-                    <select id="tipoMarcador" name="tipoMarcador" required>
-                        @foreach($tipoMarcadores as $tipo)
-                            <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-submit">Guardar</button>
-            </form>
-        </div>
-    </div>
-
-<!-- Modal para editar - Versión corregida -->
-<div id="modal-edit-lugar-destacado" class="modal" style="display: none;">
+<!-- Modal para añadir -->
+<div id="modal-lugar-destacado" style="display: none;">
     <div class="modal-content">
-        <span class="close-modal" id="close-modal-edit-lugar-destacado">&times;</span>
+        <h2 id="modal-title-lugar-destacado">Añadir Lugar Destacado</h2>
+        <form id="lugar-destacado-form">
+            @csrf
+            <input type="hidden" id="lugar-destacado-id" name="id">
+
+            <label for="nombre-lugar-destacado">Nombre</label>
+            <input type="text" id="nombre-lugar-destacado" name="nombre" required>
+
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" name="descripcion" required></textarea>
+
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" name="direccion" required>
+
+            <label for="latitud">Latitud</label>
+            <input type="number" id="create-latitud" name="latitud" step="0.000001" required>
+
+            <label for="longitud">Longitud</label>
+            <input type="number" id="longitudDestacada" name="longitud" step="0.000001" required>
+
+            <label for="tipoMarcador">Tipo Marcador</label>
+            <select id="tipoMarcador" name="tipoMarcador" required>
+                @foreach($tipoMarcadores as $tipo)
+                    <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                @endforeach
+            </select>
+
+            <button type="submit" id="save-lugar-destacado-btn">Guardar</button>
+        </form>
+        <button id="close-modal-lugar-destacado">X</button>
+    </div>
+</div>
+
+<!-- Modal para editar -->
+<div id="modal-edit-lugar-destacado" style="display: none;">
+    <div class="modal-content">
         <h2>Editar Lugar Destacado</h2>
         <form id="edit-lugar-destacado-form">
             @csrf
             @method('PUT')
             <input type="hidden" id="edit-lugar-destacado-id" name="id">
 
-            <div class="form-group">
-                <label for="edit-nombre">Nombre</label>
-                <input type="text" id="edit-nombreDestacado" name="nombre" required>
-                </div>
+            <label for="edit-nombreDestacado">Nombre</label>
+            <input type="text" id="edit-nombreDestacado" name="nombre" required>
 
-            <div class="form-group">
-                <label for="edit-descripcion">Descripción</label>
-                <textarea id="edit-descripcion" name="descripcion" required></textarea>
-            </div>
+            <label for="edit-descripcion">Descripción</label>
+            <textarea id="edit-descripcion" name="descripcion" required></textarea>
 
-            <div class="form-group">
-                <label for="edit-direccion">Dirección</label>
-                <input type="text" id="edit-direccion" name="direccion" required>
-            </div>
+            <label for="edit-direccion">Dirección</label>
+            <input type="text" id="edit-direccion" name="direccion" required>
 
-            <div class="form-group">
-                <label for="edit-latitud">Latitud</label>
-                <input type="number" id="edit-latitudDestacada" name="latitud" step="0.000001" required>
-                </div>
+            <label for="edit-latitudDestacada">Latitud</label>
+            <input type="number" id="edit-latitudDestacada" name="latitud" step="0.000001" required>
 
-            <div class="form-group">
-                <label for="edit-longitud">Longitud</label>
-                <input type="number" id="edit-longitudDestacada" name="longitud" step="0.000001" required>
-                </div>
+            <label for="edit-longitudDestacada">Longitud</label>
+            <input type="number" id="edit-longitudDestacada" name="longitud" step="0.000001" required>
 
-            <div class="form-group">
-                <label for="edit-tipo-marcador">Tipo Marcador</label>
-                <select id="edit-tipo-marcador" name="tipoMarcador" required>
-                    @foreach($tipoMarcadores as $tipo)
-                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                    @endforeach
-                </select>
-            </div>
+            <label for="edit-tipo-marcador">Tipo Marcador</label>
+            <select id="edit-tipo-marcador" name="tipoMarcador" required>
+                @foreach($tipoMarcadores as $tipo)
+                    <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                @endforeach
+            </select>
 
-            <button type="submit" class="btn-submit">Actualizar</button>
+            <button type="submit" id="edit-lugar-destacado-btn">Actualizar</button>
         </form>
+        <button id="close-modal-edit-lugar-destacado">X</button>
     </div>
-    </div>
-    </div>
+</div>    </div>
 
     <!--   ------------------------------ -->
     <!-- CRUDS DE ETIQUETA -->
     <!--   ------------------------------ -->
     <div id="etiqueta-section" class="content-section hidden">
-        <h1>Lista de Etiquetas</h1>
-            
-        <button id="btn-add-etiqueta" class="btn btn-primary">Añadir Etiqueta</button>
-            
-        <table class="table">
-            <thead>
+    <h1>Lista de Etiquetas</h1>
+    <button id="btn-add-etiqueta">Añadir Etiqueta</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($etiquetas as $etiqueta)
                 <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($etiquetas as $etiqueta)
-                    <tr>
-                        <td>{{ $etiqueta->id }}</td>
-                        <td>{{ $etiqueta->nombre }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning btn-edit-etiqueta" 
-                                    data-id="{{ $etiqueta->id }}"
-                                    data-nombre="{{ $etiqueta->nombre }}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-danger btn-delete-etiqueta" data-id="{{ $etiqueta->id }}">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <!-- Modal para añadir/editar -->
-        <div id="modal-etiqueta" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modal-title-etiqueta">Añadir Etiqueta</h5>
-                        <button type="button" class="close" id="close-modal-etiqueta" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                    <td>{{ $etiqueta->id }}</td>
+                    <td>{{ $etiqueta->nombre }}</td>
+                    <td>
+                        <button class="btn-edit-etiqueta" 
+                                data-id="{{ $etiqueta->id }}"
+                                data-nombre="{{ $etiqueta->nombre }}">
+                            Editar
                         </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="etiqueta-form">
-                            @csrf
-                            <input type="hidden" id="etiqueta-id" name="id">
-                            
-                            <div class="form-group">
-                                <label for="nombre-etiqueta">Nombre</label>
-                                <input type="text" class="form-control" id="nombre-etiqueta" name="nombre" required>
-                                <small class="form-text text-muted">Ingrese el nombre de la etiqueta</small>
-                            </div>
-                            
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" id="close-modal-etiqueta">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                        <button class="btn-delete-etiqueta" data-id="{{ $etiqueta->id }}">Eliminar</button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <!-- Modal para añadir/editar -->
+    <div id="modal-etiqueta" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-etiqueta">Añadir Etiqueta</h2>
+            <form id="etiqueta-form">
+                @csrf
+                <input type="hidden" id="etiqueta-id" name="id">
+                
+                <label for="nombre-etiqueta">Nombre</label>
+                <input type="text" id="nombre-etiqueta" name="nombre" required>
+                
+                <button type="submit" id="save-etiqueta-btn">Guardar</button>
+            </form>
+            <button id="close-modal-etiqueta">X</button>
         </div>
     </div>
-
+</div>
     <!--   ------------------------------ -->
     <!-- CRUDS DE TIPO MARCADOR -->
     <!--   ------------------------------ -->
     <div id="tipoMarcador-section" class="content-section hidden">
-        <h1>Lista de Tipos de Marcador</h1>
-        
-        <button id="btn-add-tipo-marcador" class="btn btn-primary">Añadir Tipo Marcador</button>
-        
-        <table class="table">
-            <thead>
+    <h1>Lista de Tipos de Marcador</h1>
+    <button id="btn-add-tipo-marcador">Añadir Tipo Marcador</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($tipoMarcadores as $tipo)
                 <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tipoMarcadores as $tipo)
-                    <tr>
-                        <td>{{ $tipo->id }}</td>
-                        <td>{{ $tipo->nombre }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning btn-edit-tipo-marcador" 
-                                    data-id="{{ $tipo->id }}"
-                                    data-nombre="{{ $tipo->nombre }}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-danger btn-delete-tipo-marcador" data-id="{{ $tipo->id }}">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <!-- Modal para añadir/editar -->
-        <div id="modal-tipo-marcador" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modal-title-tipo-marcador">Añadir Tipo Marcador</h5>
-                        <button type="button" class="close" id="close-modal-tipo-marcador" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                    <td>{{ $tipo->id }}</td>
+                    <td>{{ $tipo->nombre }}</td>
+                    <td>
+                        <button class="btn-edit-tipo-marcador" 
+                                data-id="{{ $tipo->id }}"
+                                data-nombre="{{ $tipo->nombre }}">
+                            Editar
                         </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="tipo-marcador-form">
-                            @csrf
-                            <input type="hidden" id="tipo-marcador-id" name="id">
-                            
-                            <div class="form-group">
-                                <label for="nombre-tipo-marcador">Nombre</label>
-                                <input type="text" class="form-control" id="nombre-tipo-marcador" name="nombre" required>
-                                <small class="form-text text-muted">Ingrese el nombre del tipo de marcador</small>
-                            </div>
-                            
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" id="close-modal-tipo-marcador">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                        <button class="btn-delete-tipo-marcador" data-id="{{ $tipo->id }}">Eliminar</button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <!-- Modal para añadir/editar -->
+    <div id="modal-tipo-marcador" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title-tipo-marcador">Añadir Tipo Marcador</h2>
+            <form id="tipo-marcador-form">
+                @csrf
+                <input type="hidden" id="tipo-marcador-id" name="id">
+                
+                <label for="nombre-tipo-marcador">Nombre</label>
+                <input type="text" id="nombre-tipo-marcador" name="nombre" required>
+                
+                <button type="submit" id="save-tipo-marcador-btn">Guardar</button>
+            </form>
+            <button id="close-modal-tipo-marcador">X</button>
         </div>
     </div>
-
+</div>
 
 
 
