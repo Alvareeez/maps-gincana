@@ -736,56 +736,75 @@
         </div>
     </div>
 
-
     <!--   ------------------------------ -->
     <!-- CRUDS DE TIPO MARCADOR -->
     <!--   ------------------------------ -->
     <div id="tipoMarcador-section" class="content-section hidden">
         <h1>Lista de Tipos de Marcador</h1>
-        <table>
+        
+        <button id="btn-add-tipo-marcador" class="btn btn-primary">Añadir Tipo Marcador</button>
+        
+        <table class="table">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Nombre</th>
-                    <th>Icono</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($tipoMarcadores as $tipo)
                     <tr>
+                        <td>{{ $tipo->id }}</td>
                         <td>{{ $tipo->nombre }}</td>
-                        <td>{{ $tipo->icono }}</td>
                         <td>
-                            <button class="btn-edit-tipo-marcador" data-id="{{ $tipo->id }}" data-nombre="{{ $tipo->nombre }}" data-icono="{{ $tipo->icono }}">Editar</button>
-                            <button class="btn-delete-tipo-marcador" data-id="{{ $tipo->id }}">Eliminar</button>
+                            <button class="btn btn-sm btn-warning btn-edit-tipo-marcador" 
+                                    data-id="{{ $tipo->id }}"
+                                    data-nombre="{{ $tipo->nombre }}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete-tipo-marcador" data-id="{{ $tipo->id }}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
 
-        <button id="btn-add-tipo-marcador">Añadir Tipo Marcador</button>
-
-        <!-- Modal para añadir -->
-        <div id="modal-tipo-marcador" style="display: none;">
-            <div class="modal-content">
-                <h2>Añadir Tipo Marcador</h2>
-                <form id="tipo-marcador-form">
-                    @csrf
-                    <input type="hidden" id="tipo-marcador-id">
-
-                    <label for="nombre-tipo-marcador">Nombre</label>
-                    <input type="text" id="nombre-tipo-marcador" name="nombre" required>
-
-                    <label for="icono">Icono (clase FontAwesome)</label>
-                    <input type="text" id="icono" name="icono" placeholder="Ej: fa-map-marker">
-
-                    <button type="submit">Guardar</button>
-                </form>
-                <button id="close-modal-tipo-marcador">X</button>
+        <!-- Modal para añadir/editar -->
+        <div id="modal-tipo-marcador" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title-tipo-marcador">Añadir Tipo Marcador</h5>
+                        <button type="button" class="close" id="close-modal-tipo-marcador" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="tipo-marcador-form">
+                            @csrf
+                            <input type="hidden" id="tipo-marcador-id" name="id">
+                            
+                            <div class="form-group">
+                                <label for="nombre-tipo-marcador">Nombre</label>
+                                <input type="text" class="form-control" id="nombre-tipo-marcador" name="nombre" required>
+                                <small class="form-text text-muted">Ingrese el nombre del tipo de marcador</small>
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="close-modal-tipo-marcador">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+
 
 
 
