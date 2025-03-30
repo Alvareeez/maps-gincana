@@ -16,12 +16,6 @@ class Gincana extends Model
         'id_ganador',
     ];
 
-    // Relación con el grupo ganador
-    public function ganadorGrupo()
-    {
-        return $this->belongsTo(Grupo::class, 'id_ganador');
-    }
-
     // Relación con todos los grupos de la gincana
     public function grupos()
     {

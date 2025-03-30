@@ -13,11 +13,6 @@ class JuegoGincana {
         this.init();
     }
 
-    ocultarLoader() {
-        const spinner = document.getElementById('spinner-respuesta');
-        if (spinner) spinner.classList.add('d-none');
-    }
-
     async init() {
         this.crearModales();
         await this.cargarEstadoJuego();
@@ -82,11 +77,18 @@ class JuegoGincana {
         
         try {
             const response = await fetch(`/gincana/api/estado-juego/${this.gincanaId}`);
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error en la respuesta del servidor');
+            }
             
             const data = await response.json();
             
-            if (data.estado === 'iniciado') {
+            if (data.estado === 'completado') {
+                return this.mostrarFinJuego(data.ganador);
+            } else if (data.estado === 'iniciado') {
+                const modalEspera = document.getElementById('modal-espera');
+                if (modalEspera) modalEspera.remove();
                 await this.iniciarJuego();
             } else if (data.estado === 'esperando') {
                 this.mostrarEstadoEsperando(data);
@@ -103,39 +105,32 @@ class JuegoGincana {
         try {
             this.mostrarLoader('Cargando nivel actual...');
             
-            // Obtener el estado actual del juego
             const response = await fetch(`/gincana/api/nivel-actual/${this.gincanaId}`);
             
             if (!response.ok) {
-                throw new Error('Error al cargar el nivel actual');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al cargar el nivel actual');
             }
             
             const data = await response.json();
             
-            // El nivel actual es el último completado + 1
-            this.nivelActual = data.nivel + 1;
+            this.nivelActual = data.nivel;
             
-            // Verificar si el juego ha terminado
             if (data.estado === 'completado') {
                 return this.mostrarFinJuego(data.ganador);
             }
             
-            // Validar que tenemos los datos necesarios
             if (!data.pista || !data.pregunta || !data.ubicacion) {
                 throw new Error('Datos del nivel incompletos');
             }
             
-            // Actualizar la interfaz
             this.mostrarInterfazJuego(data);
             
-            // Actualizar modales
             document.getElementById('contenido-pista').textContent = data.pista;
             document.getElementById('texto-pregunta').textContent = data.pregunta;
             
-            // Inicializar mapa con la ubicación del objetivo
             this.inicializarMapa(data.ubicacion);
             
-            // Mostrar pista al inicio después de un breve retraso
             setTimeout(() => {
                 this.modales.pista.show();
             }, 1000);
@@ -143,7 +138,6 @@ class JuegoGincana {
         } catch (error) {
             console.error('Error al iniciar juego:', error);
             
-            // Mostrar error específico para niveles no encontrados
             if (error.message.includes('Nivel') && error.message.includes('no encontrado')) {
                 this.mostrarError(`
                     <h5>Error en el nivel actual</h5>
@@ -195,6 +189,13 @@ class JuegoGincana {
     }
 
     inicializarMapa(ubicacionObjetivo) {
+
+        if (this.mapa) {
+            this.mapa.remove(); // destruir completamente el mapa anterior
+            this.mapa = null;
+        }
+
+        
         if (!navigator.geolocation) {
             return this.mapaFallback(ubicacionObjetivo);
         }
@@ -253,17 +254,9 @@ class JuegoGincana {
             zIndexOffset: 1000
         }).addTo(this.mapa).bindPopup('Tu ubicación actual');
     
-        // Círculo de precisión
-        this.marcadores.precision = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
-            radius: jugadorCoords.accuracy,
-            color: '#3388ff',
-            fillColor: '#3388ff',
-            fillOpacity: 0.2
-        }).addTo(this.mapa);
-    
-        // Radio visible (50m) - alrededor del jugador
+        // Radio visible (100m) - alrededor del jugador
         this.marcadores.radio = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
-            radius: 50,
+            radius: 100,
             color: '#ffc107',
             fillColor: '#ffc107',
             fillOpacity: 0.2,
@@ -315,11 +308,6 @@ class JuegoGincana {
             this.marcadores.jugador.setLatLng([jugadorCoords.lat, jugadorCoords.lng]);
         }
         
-        if (this.marcadores.precision) {
-            this.marcadores.precision.setLatLng([jugadorCoords.lat, jugadorCoords.lng])
-                .setRadius(jugadorCoords.accuracy);
-        }
-        
         // Mover el círculo amarillo con el jugador
         if (this.marcadores.radio) {
             this.marcadores.radio.setLatLng([jugadorCoords.lat, jugadorCoords.lng]);
@@ -333,7 +321,7 @@ class JuegoGincana {
         
         // Mostrar/ocultar marcador según distancia
         if (this.marcadores.objetivo) {
-            if (distancia <= 50) {
+            if (distancia <= 100) {
                 this.marcadores.objetivo.setOpacity(1);
                 this.marcadores.objetivo.bindPopup(`
                     <div class="text-center">
@@ -345,10 +333,6 @@ class JuegoGincana {
                     </div>
                 `);
                 
-                // Abrir automáticamente el popup cuando está en rango
-                if (!this.marcadores.objetivo.isPopupOpen()) {
-                    this.marcadores.objetivo.openPopup();
-                }
             } else {
                 this.marcadores.objetivo.setOpacity(0);
                 this.marcadores.objetivo.closePopup();
@@ -384,17 +368,15 @@ class JuegoGincana {
         const respuesta = respuestaInput?.value.trim() || '';
         const spinner = document.getElementById('spinner-respuesta');
         const btnEnviar = document.getElementById('btn-enviar-respuesta');
-        
-        // Validación básica
+
         if (!respuesta) {
             this.mostrarFeedback('Por favor ingresa una respuesta', 'warning');
             return;
         }
-    
-        // Mostrar loading
+
         if (spinner) spinner.classList.remove('d-none');
         if (btnEnviar) btnEnviar.disabled = true;
-    
+
         try {
             const response = await fetch(`/gincana/api/responder/${this.gincanaId}`, {
                 method: 'POST',
@@ -404,80 +386,161 @@ class JuegoGincana {
                 },
                 body: JSON.stringify({ respuesta })
             });
-            
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(data.message || 'Error en la respuesta del servidor');
             }
-            
-            // Manejar diferentes respuestas
+
             if (data.completado) {
+                this.modales.pregunta.hide();
+                this.ocultarObjetivo();
                 this.mostrarFinJuego(data.ganador);
-            } 
+            }
+
             else if (data.nivel_completado) {
+                this.modales.pregunta.hide();
+                this.ocultarObjetivo();
                 this.mostrarFeedback('¡Nivel completado! Cargando siguiente...', 'success');
                 setTimeout(() => this.iniciarJuego(), 2000);
             }
             else if (data.correcto) {
                 this.modales.pregunta.hide();
-                this.mostrarFeedback(data.message, 'success');
+                this.ocultarObjetivo();
+                this.mostrarEsperandoGrupo();
+                this.esperarAvanceGrupo();
             }
             else {
                 this.mostrarFeedback(data.message, 'danger');
             }
-            
+
         } catch (error) {
             console.error('Error al procesar respuesta:', error);
             this.mostrarFeedback(error.message, 'danger');
-            
-            // Si es error de servidor, sugerir recargar
             if (error.message.includes('500')) {
                 this.mostrarFeedback('Error del servidor. Intenta recargar la página', 'danger');
             }
         } finally {
-            // Ocultar loading y habilitar botón
             if (spinner) spinner.classList.add('d-none');
             if (btnEnviar) btnEnviar.disabled = false;
         }
     }
 
-    mostrarEstadoEsperando(data) {
-        this.contenedorEstado.innerHTML = `
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card mb-3">
-                        <div class="card-header bg-warning text-dark">
-                            <h4 class="mb-0"><i class="fas fa-users me-2"></i>Esperando jugadores</h4>
-                        </div>
-                        <div class="card-body">
-                            <p class="lead">Esperando a que se unan todos los jugadores...</p>
-                            <div class="progress mb-4" style="height: 20px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" style="width: ${this.calcularProgreso(data.grupos)}%">
-                                </div>
-                            </div>
-                            <div class="row" id="contenedor-grupos">
-                                ${data.grupos.map(grupo => this.crearTarjetaGrupo(grupo)).join('')}
-                            </div>
-                        </div>
-                        <div class="card-footer text-center">
-                            <div class="spinner-border text-warning" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-2 mb-0">Actualizando en 5 segundos...</p>
-                        </div>
+    ocultarObjetivo() {
+        if (this.marcadores.objetivo) {
+            this.marcadores.objetivo.remove();
+            delete this.marcadores.objetivo;
+        }
+    }
+
+    mostrarEsperandoGrupo() {
+        if (document.getElementById('modal-espera')) return;
+
+        const esperaModal = document.createElement('div');
+        esperaModal.id = 'modal-espera';
+        esperaModal.className = 'modal fade show d-block';
+        esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        esperaModal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">Esperando al resto del grupo</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-warning mb-3" role="status"></div>
+                        <p>Has respondido correctamente. Esperando a los demás jugadores...</p>
+                        <p id="contador-jugadores-restantes">Calculando...</p>
                     </div>
                 </div>
             </div>
         `;
+        document.body.appendChild(esperaModal);
     }
 
-    calcularProgreso(grupos) {
-        const totalJugadores = grupos.reduce((sum, grupo) => sum + grupo.max_jugadores, 0);
-        const jugadoresConectados = grupos.reduce((sum, grupo) => sum + grupo.jugadores, 0);
-        return Math.round((jugadoresConectados / totalJugadores) * 100);
+    actualizarContadorRestantes() {
+        fetch(`/gincana/api/estado-juego/${this.gincanaId}`)
+            .then(res => res.json())
+            .then(data => {
+                const grupo = data.grupos.find(g => g.es_mi_grupo);
+                if (grupo && grupo.jugadores_completados !== undefined) {
+                    const restante = grupo.max_jugadores - grupo.jugadores_completados;
+                    const texto = document.getElementById('contador-jugadores-restantes');
+                    if (texto) texto.textContent = `Jugadores restantes: ${restante}`;
+                }
+            })
+            .catch(err => console.warn('No se pudo actualizar el contador:', err));
     }
+
+    esperarAvanceGrupo() {
+        this.actualizarContadorRestantes();
+
+        if (this.intervaloEsperaGrupo) {
+            clearInterval(this.intervaloEsperaGrupo);
+        }
+
+        this.intervaloEsperaGrupo = setInterval(async () => {
+            try {
+                const res = await fetch(`/gincana/api/nivel-actual/${this.gincanaId}`);
+                const data = await res.json();
+
+                if (data.nivel > this.nivelActual) {
+                    clearInterval(this.intervaloEsperaGrupo);
+                    const modalEspera = document.getElementById('modal-espera');
+                    if (modalEspera) modalEspera.remove();
+                    this.iniciarJuego();
+                } else {
+                    this.actualizarContadorRestantes();
+                }
+            } catch (e) {
+                console.warn('Error esperando avance:', e);
+            }
+        }, 5000);
+    }
+
+    mostrarEstadoEsperando(data) {
+        if (document.getElementById('modal-espera')) return;
+    
+        const esperaModal = document.createElement('div');
+        esperaModal.id = 'modal-espera';
+        esperaModal.className = 'modal fade show d-block';
+        esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        esperaModal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">Esperando a que todos los jugadores se unan</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-warning mb-3" role="status"></div>
+                        <p>Estamos esperando que todos los grupos estén completos para comenzar la gincana.</p>
+                        <p id="contador-jugadores-restantes">Calculando...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        document.body.appendChild(esperaModal);
+        this.actualizarContadorRestantesGlobal(data);
+    }
+
+    actualizarContadorRestantesGlobal(data) {
+        let totalJugadores = 0;
+        let conectados = 0;
+    
+        if (Array.isArray(data.grupos)) {
+            data.grupos.forEach(grupo => {
+                totalJugadores += grupo.max_jugadores;
+                conectados += grupo.jugadores || 0;
+            });
+        }
+    
+        const restantes = totalJugadores - conectados;
+        const texto = document.getElementById('contador-jugadores-restantes');
+        if (texto) texto.textContent = `Jugadores restantes: ${restantes}`;
+    }
+    
+    
 
     crearTarjetaGrupo(grupo) {
         return `
@@ -637,9 +700,14 @@ class JuegoGincana {
                 );
             }, 1000);
         } else {
-            this.mapaFallback(objetivo);
-            this.modales.pista.show();
-            this.mostrarErrorGPS(error);
+            if (!this.mapa) {
+                this.mapaFallback(objetivo);
+            }
+            
+            if (!this.errorMostrado) {
+                this.errorMostrado = true;
+                this.mostrarErrorGPS(error);
+            }
         }
     }
 
@@ -818,3 +886,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Estado del juego polling agregado el 2025-03-30 15:54:15.314412
+
+setInterval(async () => {
+    try {
+        const gincanaId = document.querySelector('script[data-gincana-id]')?.getAttribute('data-gincana-id');
+        if (!gincanaId) return;
+
+        const response = await fetch(`/gincana/api/estado-juego/${gincanaId}`);
+        const data = await response.json();
+
+        if (data.estado === 'completado') {
+            const modalEspera = document.getElementById('modal-espera');
+            if (modalEspera) modalEspera.remove();
+
+            if (typeof window.juegoGincana?.modales?.pregunta?.hide === 'function') {
+                window.juegoGincana.modales.pregunta.hide();
+            }
+
+            if (typeof window.juegoGincana?.mostrarFinJuego === 'function') {
+                window.juegoGincana.mostrarFinJuego(data.ganador);
+            }
+        }
+
+    } catch (error) {
+        console.error("Error comprobando estado del juego:", error);
+    }
+}, 10000); // cada 10s
