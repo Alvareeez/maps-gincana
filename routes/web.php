@@ -71,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Ruta para ver el mapa (requiere estar logueado)
     Route::get('/mapa', [MapaController::class, 'index'])->name('mapa');
+    Route::get('/mapaUser', [MapaController::class, 'indexx'])->name('mapaUser');
 
     // ----------------------------------------
     // -------------- CRUDS ADMIN -------------
