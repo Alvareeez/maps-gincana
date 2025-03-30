@@ -6,6 +6,10 @@ var routingControl;
 var map = L.map('map', {
     zoomControl: false // Deshabilitar los controles de zoom predeterminados
 });
+// Circulo radio
+var userLocationCircle;
+var userRadius = 1000; // Radio predeterminado en metros
+var radiusControl;
 // Evitar que el clic en el input del buscador active el evento del mapa
 document.getElementById('buscador').addEventListener('click', function (e) {
     e.stopPropagation();
@@ -37,11 +41,285 @@ map.on('locationfound', function (e) {
     // Añadir un marcador con el icono personalizado en la ubicación del usuario
     L.marker([userLat, userLng], { icon: userLocationIcon }).addTo(map)
         .bindPopup('Estás aquí.')
-        .openPopup();
+        .openPopup();// Eliminar el círculo anterior si existe
+    if (userLocationCircle) {
+        map.removeLayer(userLocationCircle);
+    }
+
+    // Crear y añadir el círculo con el radio actual
+    userLocationCircle = L.circle([userLat, userLng], {
+        radius: userRadius,
+        color: '#3388ff',
+        fillColor: '#3388ff',
+        fillOpacity: 0.2
+    }).addTo(map);
+
+    // Crear control para ajustar el radio si no existe
+    if (!radiusControl) {
+        radiusControl = L.control({ position: 'bottomright' });
+
+        // Modifica la función radiusControl.onAdd para incluir el botón "Mostrar todo"
+        radiusControl.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'radius-control');
+            div.innerHTML = `
+        <div class="input-group input-group-sm mb-1">
+            <span class="input-group-text">Radio (m)</span>
+            <input type="number" id="radiusInput" class="form-control" value="${userRadius}" min="100" max="10000" step="100">
+            <button class="btn btn-primary" id="updateRadius">Aplicar</button>
+        </div>
+        <button class="btn btn-secondary w-100 btn-sm" id="showAll">Mostrar todo</button>
+    `;
+            return div;
+        };
+
+        radiusControl.addTo(map);
+
+        // Evento para actualizar el radio
+        document.getElementById('updateRadius').addEventListener('click', function () {
+            var newRadius = parseInt(document.getElementById('radiusInput').value);
+            if (!isNaN(newRadius) && newRadius >= 100 && newRadius <= 10000) {
+                userRadius = newRadius;
+                updateUserRadiusCircle();
+                filtrarPorRadio(); // Nueva función que filtra por radio
+            } else {
+                alert('Por favor ingrese un valor entre 100 y 10000 metros');
+            }
+        });
+
+        // Evento para mostrar todos los lugares
+        document.getElementById('showAll').addEventListener('click', function () {
+            // Eliminar el círculo de radio temporalmente
+            if (userLocationCircle) {
+                map.removeLayer(userLocationCircle);
+            }
+
+            // Cargar todos los lugares sin filtrar por radio
+            cargarTodosLosLugares();
+
+            // Después de un breve retraso, volver a mostrar el círculo
+            setTimeout(() => {
+                if (userLat && userLng) {
+                    userLocationCircle = L.circle([userLat, userLng], {
+                        radius: userRadius,
+                        color: '#3388ff',
+                        fillColor: '#3388ff',
+                        fillOpacity: 0.2
+                    }).addTo(map);
+                }
+            }, 100);
+        });
+    }
+    filtrarPorRadio();
 });
+
+// Función para cargar todos los lugares sin filtrar por radio
+function cargarTodosLosLugares() {
+    // Limpiar marcadores existentes
+    lugaresDestacados.forEach(lugar => {
+        if (lugar.marker) {
+            map.removeLayer(lugar.marker);
+        }
+    });
+    lugaresDestacados = [];
+
+    // Mostrar carga mientras se obtienen los datos
+    Swal.fire({
+        title: 'Cargando todos los lugares...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/lugares-destacados', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(lugares => {
+            Swal.close();
+
+            lugares.forEach(lugar => {
+                // Determinar el tipo de marcador correctamente
+                const tipoMarcadorId = lugar.tipo_marcador?.id || lugar.tipoMarcador?.id || 1;
+                const icono = crearIconoMarcador(tipoMarcadorId);
+
+                const marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
+
+                // Obtener nombres de etiquetas si existen
+                const etiquetasNames = lugar.etiquetas ? lugar.etiquetas.map(e => e.nombre).join(', ') : 'Sin etiquetas';
+
+                // Calcular distancia si tenemos ubicación del usuario
+                let distanciaInfo = '';
+                if (userLat && userLng) {
+                    const userLocation = L.latLng(userLat, userLng);
+                    const lugarLocation = L.latLng(lugar.latitud, lugar.longitud);
+                    const distancia = userLocation.distanceTo(lugarLocation);
+                    distanciaInfo = `<br><small>Distancia: ${Math.round(distancia)} metros</small>`;
+                }
+
+                // Crear contenido del popup
+                const popupContent = `
+                <b>${lugar.nombre}</b><br>
+                ${lugar.descripcion}<br>
+                <small>Etiquetas: ${etiquetasNames}</small><br>
+                Dirección: ${lugar.direccion}${distanciaInfo}<br>
+                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                ${lugar.esFavorito
+                        ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${tipoMarcadorId})">Añadir a favoritos</button>`
+                    }
+            `;
+
+                marker.bindPopup(popupContent);
+
+                lugaresDestacados.push({
+                    id: lugar.id,
+                    nombre: lugar.nombre,
+                    direccion: lugar.direccion,
+                    latitud: lugar.latitud,
+                    longitud: lugar.longitud,
+                    marker: marker,
+                    esFavorito: lugar.esFavorito || false,
+                    tipoMarcador: {
+                        id: tipoMarcadorId,
+                        nombre: lugar.tipo_marcador?.nombre || lugar.tipoMarcador?.nombre || 'General'
+                    }
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar todos los lugares:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los lugares. Verifica la consola para más detalles.'
+            });
+        });
+}
+// Función para filtrar lugares por radio
+// Función para filtrar lugares por radio
+function filtrarPorRadio() {
+    if (!userLat || !userLng) {
+        alert('No se pudo obtener tu ubicación. Asegúrate de permitir el acceso a la ubicación.');
+        return;
+    }
+
+    // Crear un punto LatLng para la ubicación del usuario
+    const userLocation = L.latLng(userLat, userLng);
+
+    // Limpiar marcadores existentes
+    lugaresDestacados.forEach(lugar => {
+        if (lugar.marker) {
+            map.removeLayer(lugar.marker);
+        }
+    });
+    lugaresDestacados = [];
+
+    // Mostrar carga mientras se obtienen los datos
+    Swal.fire({
+        title: 'Cargando lugares...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/lugares-destacados', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(lugares => {
+            Swal.close();
+
+            lugares.forEach(lugar => {
+                const lugarLocation = L.latLng(lugar.latitud, lugar.longitud);
+                const distancia = userLocation.distanceTo(lugarLocation); // Distancia en metros
+
+                // Solo mostrar si está dentro del radio
+                if (distancia <= userRadius) {
+                    // Determinar el tipo de marcador correctamente
+                    const tipoMarcadorId = lugar.tipo_marcador?.id || lugar.tipoMarcador?.id || 1;
+                    const icono = crearIconoMarcador(tipoMarcadorId);
+                    const marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
+
+                    // Obtener nombres de etiquetas si existen
+                    const etiquetasNames = lugar.etiquetas ? lugar.etiquetas.map(e => e.nombre).join(', ') : 'Sin etiquetas';
+
+                    // Crear contenido del popup
+                    const popupContent = `
+                    <b>${lugar.nombre}</b><br>
+                    ${lugar.descripcion}<br>
+                    <small>Etiquetas: ${etiquetasNames}</small><br>
+                    Dirección: ${lugar.direccion}<br>
+                    <small>Distancia: ${Math.round(distancia)} metros</small><br>
+                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                    <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                    <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                    ${lugar.esFavorito
+                            ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
+                            : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${tipoMarcadorId})">Añadir a favoritos</button>`
+                        }
+                `;
+
+                    marker.bindPopup(popupContent);
+
+                    lugaresDestacados.push({
+                        id: lugar.id,
+                        nombre: lugar.nombre,
+                        direccion: lugar.direccion,
+                        latitud: lugar.latitud,
+                        longitud: lugar.longitud,
+                        marker: marker,
+                        esFavorito: lugar.esFavorito || false,
+                        tipoMarcador: {
+                            id: tipoMarcadorId,
+                            nombre: lugar.tipo_marcador?.nombre || lugar.tipoMarcador?.nombre || 'General'
+                        }
+                    });
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error al filtrar lugares por radio:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los lugares. Verifica la consola para más detalles.'
+            });
+        });
+}
+// Función para actualizar el círculo de radio
+function updateUserRadiusCircle() {
+    if (userLocationCircle && userLat && userLng) {
+        map.removeLayer(userLocationCircle);
+        userLocationCircle = L.circle([userLat, userLng], {
+            radius: userRadius,
+            color: '#3388ff',
+            fillColor: '#3388ff',
+            fillOpacity: 0.2
+        }).addTo(map);
+
+        // Filtrar los lugares por el nuevo radio
+        filtrarPorRadio();
+    }
+}
 
 // Función para cargar los lugares destacados desde la base de datos
 function cargarLugaresDestacados() {
+    if (filtrarPorRadio && userLat && userLng) {
+        filtrarPorRadio();
+        return;
+    }
     fetch('/lugares-destacados')
         .then(response => response.json())
         .then(lugares => {
@@ -244,6 +522,7 @@ map.on('click', async function (e) {
 var lugaresDestacados = [];
 
 // Función para buscar lugares destacados
+// Función para buscar lugares destacados
 function buscarLugar(query) {
     fetch(`/buscar-lugares?query=${encodeURIComponent(query)}`)
         .then(response => response.json())
@@ -255,34 +534,51 @@ function buscarLugar(query) {
                         map.removeLayer(lugar.marker);
                     }
                 });
+                lugaresDestacados = [];
 
                 // Añadir los resultados al mapa
                 lugares.forEach((lugar, index) => {
-                    // Ejemplo de cómo usarla en cargarLugaresDestacados()
-                    const icono = crearIconoMarcador(lugar.tipo_marcador);
-                    var marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
+                    // Determinar el tipo de marcador correctamente
+                    const tipoMarcadorId = lugar.tipo_marcador?.id || lugar.tipoMarcador?.id || 1;
+                    const icono = crearIconoMarcador(tipoMarcadorId);
+                    const marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
 
-                    // Crear el contenido del popup con un botón de eliminar
-                    var popupContent = `
-                    <b>${lugar.nombre}</b><br>
-                    ${lugar.descripcion}<br>
-                    Dirección: ${lugar.direccion}<br>
-                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
-                    <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
-                    ${lugar.esFavorito
+                    // Obtener nombres de etiquetas si existen
+                    const etiquetasNames = lugar.etiquetas
+                        ? lugar.etiquetas.map(e => e.nombre).join(', ')
+                        : 'Sin etiquetas';
+
+                    // Calcular distancia si tenemos ubicación del usuario
+                    let distanciaInfo = '';
+                    if (userLat && userLng) {
+                        const userLocation = L.latLng(userLat, userLng);
+                        const lugarLocation = L.latLng(lugar.latitud, lugar.longitud);
+                        const distancia = userLocation.distanceTo(lugarLocation);
+                        distanciaInfo = `<br><small>Distancia: ${Math.round(distancia)} metros</small>`;
+                    }
+
+                    // Crear contenido del popup
+                    const popupContent = `
+                        <b>${lugar.nombre}</b><br>
+                        ${lugar.descripcion}<br>
+                        <small>Etiquetas: ${etiquetasNames}</small><br>
+                        Dirección: ${lugar.direccion}${distanciaInfo}<br>
+                        <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
+                        <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
+                        ${lugar.esFavorito
                             ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
-                            : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                            : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${tipoMarcadorId})">Añadir a favoritos</button>`
                         }
-                `;
+                    `;
 
                     // Asignar el popup al marcador
                     marker.bindPopup(popupContent);
 
                     // Centrar el mapa en el primer resultado y abrir su popup
                     if (index === 0) {
-                        map.setView([lugar.latitud, lugar.longitud], 15); // Centrar el mapa
-                        marker.openPopup(); // Abrir el popup del primer resultado
+                        map.setView([lugar.latitud, lugar.longitud], 15);
+                        marker.openPopup();
                     }
 
                     // Guardar el marcador en la lista
@@ -293,15 +589,31 @@ function buscarLugar(query) {
                         latitud: lugar.latitud,
                         longitud: lugar.longitud,
                         marker: marker,
-                        esFavorito: lugar.esFavorito || false,  // ✨ Añadir esta línea
-                        tipoMarcador: lugar.tipoMarcador || null  // ✨ Añadir esta línea
+                        esFavorito: lugar.esFavorito || false,
+                        tipoMarcador: {
+                            id: tipoMarcadorId,
+                            nombre: lugar.tipo_marcador?.nombre || lugar.tipoMarcador?.nombre || 'General'
+                        }
                     });
                 });
             } else {
-                // alert('No se encontraron lugares con esa búsqueda.');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin resultados',
+                    text: 'No se encontraron lugares con esa búsqueda.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
         })
-        .catch(error => console.error('Error al buscar lugares:', error));
+        .catch(error => {
+            console.error('Error al buscar lugares:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al realizar la búsqueda.'
+            });
+        });
 }
 // Evento para manejar el buscador
 document.getElementById('buscador').addEventListener('input', function (e) {
@@ -425,7 +737,9 @@ function aplicarFiltros() {
             }
 
             lugares.forEach(lugar => {
-                const icono = crearIconoMarcador(lugar.tipo_marcador);
+                // Determinar el tipo de marcador correctamente
+                const tipoMarcadorId = lugar.tipo_marcador?.id || lugar.tipoMarcador?.id || 1;
+                const icono = crearIconoMarcador(tipoMarcadorId);
                 const marker = L.marker([lugar.latitud, lugar.longitud], { icon: icono }).addTo(map);
 
                 // Obtener nombres de etiquetas si existen
@@ -433,18 +747,27 @@ function aplicarFiltros() {
                     ? lugar.etiquetas.map(e => e.nombre).join(', ')
                     : 'Sin etiquetas';
 
+                // Calcular distancia si tenemos ubicación del usuario
+                let distanciaInfo = '';
+                if (userLat && userLng) {
+                    const userLocation = L.latLng(userLat, userLng);
+                    const lugarLocation = L.latLng(lugar.latitud, lugar.longitud);
+                    const distancia = userLocation.distanceTo(lugarLocation);
+                    distanciaInfo = `<br><small>Distancia: ${Math.round(distancia)} metros</small>`;
+                }
+
                 // Crear contenido del popup
                 const popupContent = `
                 <b>${lugar.nombre}</b><br>
                 ${lugar.descripcion}<br>
                 <small>Etiquetas: ${etiquetasNames}</small><br>
-                Dirección: ${lugar.direccion}<br>
+                Dirección: ${lugar.direccion}${distanciaInfo}<br>
                 <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
                 <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
                 <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
                 ${lugar.esFavorito
                         ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
-                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${lugar.tipoMarcador ? lugar.tipoMarcador.id : 1})">Añadir a favoritos</button>`
+                        : `<button class="btn btn-success btn-sm mt-2" onclick="agregarAFavoritos(${lugar.id}, ${tipoMarcadorId})">Añadir a favoritos</button>`
                     }
             `;
 
@@ -458,7 +781,10 @@ function aplicarFiltros() {
                     longitud: lugar.longitud,
                     marker: marker,
                     esFavorito: lugar.esFavorito || false,
-                    tipoMarcador: lugar.tipoMarcador || null
+                    tipoMarcador: {
+                        id: tipoMarcadorId,
+                        nombre: lugar.tipo_marcador?.nombre || lugar.tipoMarcador?.nombre || 'General'
+                    }
                 });
             });
         })
@@ -570,9 +896,11 @@ function filtrarPorEtiqueta(etiquetaId) {
 function crearIconoMarcador(tipoMarcadorId) {
     const basePath = window.location.origin;
     const iconosPorTipo = {
-        1: '/img/fondo_GA.png',  // Ruta para tipo 1
-        2: '/img/icono-tipo2.png',  // Ruta para tipo 2
-        4: '/img/deportes.png'   // Ruta para tipo 4
+        1: '/img/edificio.jpg',  // Ruta para tipo 1
+        2: '/img/ocio.png',  // Ruta para tipo 2
+        3: '/img/resposteria.png',  // Ruta para tipo 2
+        4: '/img/deportes.png',   // Ruta para tipo 4
+        5: '/img/interes.png'   // Ruta para tipo 5
     };
 
     const rutaIcono = iconosPorTipo[tipoMarcadorId] || '/img/default.png';
@@ -585,7 +913,7 @@ function crearIconoMarcador(tipoMarcadorId) {
     });
 }
 function agregarAFavoritos(lugarId, tipoMarcadorId) {
-    const idListaPredeterminada = 1;
+    // const idListaPredeterminada = 1;
 
     fetch('/lugares-destacados/favoritos', {
         method: 'POST',
@@ -597,7 +925,7 @@ function agregarAFavoritos(lugarId, tipoMarcadorId) {
         body: JSON.stringify({
             lugar_destacado_id: lugarId,
             tipoMarcador: tipoMarcadorId || 1,
-            id_lista: idListaPredeterminada
+            // id_lista: idListaPredeterminada
         })
     })
         .then(async response => {
