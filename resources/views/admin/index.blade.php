@@ -21,6 +21,9 @@
                 <li><a href="#" class="nav-link" data-section="lugares">Lugares</a></li>
                 <li><a href="#" class="nav-link" data-section="niveles">Niveles</a></li>
                 <li><a href="#" class="nav-link" data-section="gincanas">Gincanas</a></li>
+                <li><a href="#" class="nav-link" data-section="lugarDestacado">Lugar Destacado</a></li>
+                <li><a href="#" class="nav-link" data-section="etiqueta">Etiqueta</a></li>
+                <li><a href="#" class="nav-link" data-section="tipoMarcador">Tipo Marcador</a></li>
             </ul>
         </div>
     </nav>
@@ -84,6 +87,7 @@
 
                 <label for="id_rol">Rol</label>
                 <select id="id_rol" name="id_rol" required>
+
                     @foreach($roles as $role)
                         <option value="{{ $role->id }}">{{ $role->nombre }}</option>
                     @endforeach
@@ -243,10 +247,10 @@
             <input type="text" id="pista" name="pista" required>
 
             <label for="latitud">Latitud</label>
-            <input type="number" id="latitud" name="latitud" required step="0.01">
+            <input type="text" id="latitud" name="latitud" required step="0.01">
 
             <label for="longitud">Longitud</label>
-            <input type="number" id="longitud" name="longitud" required step="0.01">
+            <input type="text" id="longitud" name="longitud" required step="0.01">
 
             <button type="submit" id="save-lugar-btn">Guardar</button>
         </form>
@@ -522,6 +526,268 @@
     </div>
     </div>
 
+    <!--   ------------------------------ -->
+    <!-- CRUDS DE LUGAR DESTACADO -->
+    <!--   ------------------------------ -->
+    <div id="lugarDestacado-section" class="content-section hidden">
+    <h1>Lista de Lugares Destacados</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Dirección</th>
+                <th>Latitud</th>
+                <th>Longitud</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($lugaresDestacados as $lugar)
+                <tr>
+                    <td>{{ $lugar->nombre }}</td>
+                    <td>{{ $lugar->descripcion }}</td>
+                    <td>{{ $lugar->direccion }}</td>
+                    <td>{{ $lugar->latitud }}</td>
+                    <td>{{ $lugar->longitud }}</td>
+                    <td>
+                    <button class="btn-edit-lugar-destacado" 
+                            data-id="{{ $lugar->id }}"
+                            data-nombre="{{ $lugar->nombre }}"
+                            data-descripcion="{{ $lugar->descripcion }}"
+                            data-direccion="{{ $lugar->direccion }}"
+                            data-latitud="{{ $lugar->latitud }}"
+                            data-longitud="{{ $lugar->longitud }}"
+                            data-tipo-marcador="{{ $lugar->tipoMarcador->id ?? '' }}">
+                        Editar
+                    </button>
+                        <button class="btn-delete-lugar-destacado" data-id="{{ $lugar->id }}">Eliminar</button>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <button id="btn-add-lugar-destacado">Añadir Lugar Destacado</button>
+
+    <!-- Modal para añadir -->
+    <div id="modal-lugar-destacado" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal-lugar-destacado">&times;</span>
+            <h2 id="modal-title-lugar-destacado">Añadir Lugar Destacado</h2>
+            <form id="lugar-destacado-form">
+                @csrf
+                <input type="hidden" id="lugar-destacado-id" name="id">
+
+                <div class="form-group">
+                    <label for="nombre-lugar-destacado">Nombre</label>
+                    <input type="text" id="nombre-lugar-destacado" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="latitud">Latitud</label>
+                    <input type="number" id="create-latitud" name="latitud" step="0.000001" required>
+                    </div>
+
+                <div class="form-group">
+                    <label for="longitud">Longitud</label>
+                    <input type="number" id="longitudDestacada" name="longitud" step="0.000001" required>
+                    </div>
+
+                <div class="form-group">
+                    <label for="tipoMarcador">Tipo Marcador</label>
+                    <select id="tipoMarcador" name="tipoMarcador" required>
+                        @foreach($tipoMarcadores as $tipo)
+                            <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+<!-- Modal para editar - Versión corregida -->
+<div id="modal-edit-lugar-destacado" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-modal" id="close-modal-edit-lugar-destacado">&times;</span>
+        <h2>Editar Lugar Destacado</h2>
+        <form id="edit-lugar-destacado-form">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="edit-lugar-destacado-id" name="id">
+
+            <div class="form-group">
+                <label for="edit-nombre">Nombre</label>
+                <input type="text" id="edit-nombreDestacado" name="nombre" required>
+                </div>
+
+            <div class="form-group">
+                <label for="edit-descripcion">Descripción</label>
+                <textarea id="edit-descripcion" name="descripcion" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-direccion">Dirección</label>
+                <input type="text" id="edit-direccion" name="direccion" required>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-latitud">Latitud</label>
+                <input type="number" id="edit-latitudDestacada" name="latitud" step="0.000001" required>
+                </div>
+
+            <div class="form-group">
+                <label for="edit-longitud">Longitud</label>
+                <input type="number" id="edit-longitudDestacada" name="longitud" step="0.000001" required>
+                </div>
+
+            <div class="form-group">
+                <label for="edit-tipo-marcador">Tipo Marcador</label>
+                <select id="edit-tipo-marcador" name="tipoMarcador" required>
+                    @foreach($tipoMarcadores as $tipo)
+                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">Actualizar</button>
+        </form>
+    </div>
+    </div>
+    </div>
+
+    <!--   ------------------------------ -->
+    <!-- CRUDS DE ETIQUETA -->
+    <!--   ------------------------------ -->
+    <div id="etiqueta-section" class="content-section hidden">
+        <h1>Lista de Etiquetas</h1>
+            
+        <button id="btn-add-etiqueta" class="btn btn-primary">Añadir Etiqueta</button>
+            
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($etiquetas as $etiqueta)
+                    <tr>
+                        <td>{{ $etiqueta->id }}</td>
+                        <td>{{ $etiqueta->nombre }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-edit-etiqueta" 
+                                    data-id="{{ $etiqueta->id }}"
+                                    data-nombre="{{ $etiqueta->nombre }}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete-etiqueta" data-id="{{ $etiqueta->id }}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <!-- Modal para añadir/editar -->
+        <div id="modal-etiqueta" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title-etiqueta">Añadir Etiqueta</h5>
+                        <button type="button" class="close" id="close-modal-etiqueta" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="etiqueta-form">
+                            @csrf
+                            <input type="hidden" id="etiqueta-id" name="id">
+                            
+                            <div class="form-group">
+                                <label for="nombre-etiqueta">Nombre</label>
+                                <input type="text" class="form-control" id="nombre-etiqueta" name="nombre" required>
+                                <small class="form-text text-muted">Ingrese el nombre de la etiqueta</small>
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="close-modal-etiqueta">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--   ------------------------------ -->
+    <!-- CRUDS DE TIPO MARCADOR -->
+    <!--   ------------------------------ -->
+    <div id="tipoMarcador-section" class="content-section hidden">
+        <h1>Lista de Tipos de Marcador</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Icono</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($tipoMarcadores as $tipo)
+                    <tr>
+                        <td>{{ $tipo->nombre }}</td>
+                        <td>{{ $tipo->icono }}</td>
+                        <td>
+                            <button class="btn-edit-tipo-marcador" data-id="{{ $tipo->id }}" data-nombre="{{ $tipo->nombre }}" data-icono="{{ $tipo->icono }}">Editar</button>
+                            <button class="btn-delete-tipo-marcador" data-id="{{ $tipo->id }}">Eliminar</button>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <button id="btn-add-tipo-marcador">Añadir Tipo Marcador</button>
+
+        <!-- Modal para añadir -->
+        <div id="modal-tipo-marcador" style="display: none;">
+            <div class="modal-content">
+                <h2>Añadir Tipo Marcador</h2>
+                <form id="tipo-marcador-form">
+                    @csrf
+                    <input type="hidden" id="tipo-marcador-id">
+
+                    <label for="nombre-tipo-marcador">Nombre</label>
+                    <input type="text" id="nombre-tipo-marcador" name="nombre" required>
+
+                    <label for="icono">Icono (clase FontAwesome)</label>
+                    <input type="text" id="icono" name="icono" placeholder="Ej: fa-map-marker">
+
+                    <button type="submit">Guardar</button>
+                </form>
+                <button id="close-modal-tipo-marcador">X</button>
+            </div>
+        </div>
+    </div>
+
+
 
 
 
@@ -534,6 +800,11 @@
     <script src="{{ asset('js/manageLugar.js') }}"></script>
     <script src="{{ asset('js/manageNivel.js') }}"></script>
     <script src="{{ asset('js/manageGincana.js') }}"></script>
+    <script src="{{ asset('js/manageLugarDestacado.js') }}"></script>
+    <script src="{{ asset('js/manageEtiqueta.js') }}"></script>
+    <script src="{{ asset('js/manageTipoMarcador.js') }}"></script>
+
+
 
 
 </body>
