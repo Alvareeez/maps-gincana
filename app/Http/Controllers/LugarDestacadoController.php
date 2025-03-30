@@ -12,9 +12,10 @@ class LugarDestacadoController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = LugarDestacado::with(['etiquetas', 'tipoMarcador', 'favoritos' => function ($q) {
-                $q->where('id_lista', 1); // ID de lista predeterminada
-            }]);
+            $query = LugarDestacado::with(['etiquetas', 'tipoMarcador'])
+                ->withCount(['favoritos' => function ($q) {
+                    $q->whereNull('id_lista'); // Solo contar favoritos sin lista
+                }]);
 
             // Filtro por etiqueta
             if ($request->has('etiqueta') && $request->etiqueta) {
@@ -23,16 +24,18 @@ class LugarDestacadoController extends Controller
                 });
             }
 
-            // Filtro por favoritos
+            // Filtro por favoritos (ahora basado en favoritos sin lista)
             if ($request->has('favoritos')) {
                 $favoritos = $request->favoritos === 'true';
-                $query->whereHas('favoritos', function ($q) use ($favoritos) {
-                    $q->where('id_lista', 1);
-                }, $favoritos ? '>=' : '=', $favoritos ? 1 : 0);
+                if ($favoritos) {
+                    $query->has('favoritos', '>', 0); // Tiene al menos un favorito (sin lista)
+                } else {
+                    $query->doesntHave('favoritos'); // No tiene favoritos
+                }
             }
 
             $lugares = $query->get()->map(function ($lugar) {
-                $lugar->esFavorito = $lugar->favoritos->isNotEmpty();
+                $lugar->esFavorito = $lugar->favoritos_count > 0;
                 return $lugar;
             });
 
@@ -152,10 +155,9 @@ class LugarDestacadoController extends Controller
         ]);
 
         try {
-            $idListaFija = 1;
-
-            if (Favorito::where('id_lista', $idListaFija)
-                ->where('lugar_destacado_id', $request->lugar_destacado_id)
+            // Verificar si ya es favorito (sin lista específica)
+            if (Favorito::where('lugar_destacado_id', $request->lugar_destacado_id)
+                ->whereNull('id_lista')
                 ->exists()
             ) {
                 return response()->json([
@@ -166,7 +168,7 @@ class LugarDestacadoController extends Controller
 
             $favorito = Favorito::create([
                 'lugar_destacado_id' => $request->lugar_destacado_id,
-                'id_lista' => $idListaFija,
+                'id_lista' => null, // Sin lista
                 'tipoMarcador' => $request->tipoMarcador
             ]);
 
@@ -174,7 +176,7 @@ class LugarDestacadoController extends Controller
                 'success' => true,
                 'message' => 'Lugar añadido a favoritos',
                 'data' => $favorito,
-                'esFavorito' => true // Añade esta línea
+                'esFavorito' => true
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -188,11 +190,9 @@ class LugarDestacadoController extends Controller
     public function quitarDeFavoritos($id)
     {
         try {
-            $idListaFija = 1; // ID de lista predeterminada (mismo que en addToFavorites)
-
-            // Buscar y eliminar el favorito
-            $favorito = Favorito::where('id_lista', $idListaFija)
-                ->where('lugar_destacado_id', $id)
+            // Buscar y eliminar el favorito (sin lista específica)
+            $favorito = Favorito::where('lugar_destacado_id', $id)
+                ->whereNull('id_lista')
                 ->first();
 
             if (!$favorito) {
