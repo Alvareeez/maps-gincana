@@ -247,10 +247,10 @@
             <input type="text" id="pista" name="pista" required>
 
             <label for="latitud">Latitud</label>
-            <input type="text" id="latitud" name="latitud" required step="0.01">
+            <input type="text" id="latitud" name="latitud" required step="0.00000001">
 
             <label for="longitud">Longitud</label>
-            <input type="text" id="longitud" name="longitud" required step="0.01">
+            <input type="text" id="longitud" name="longitud" required step="0.00000001">
 
             <button type="submit" id="save-lugar-btn">Guardar</button>
         </form>
@@ -277,10 +277,10 @@
             <input type="text" id="edit-pista" name="pista" required>
 
             <label for="edit-latitud">Latitud</label>
-            <input type="number" id="edit-latitud" name="latitud" required step="0.01">
+            <input type="number" id="edit-latitud" name="latitud" required step="0.00000001">
 
             <label for="edit-longitud">Longitud</label>
-            <input type="number" id="edit-longitud" name="longitud" required step="0.01">
+            <input type="number" id="edit-longitud" name="longitud" required step="0.00000001">
 
             <button type="submit" id="edit-lugar-btn">Actualizar</button>
         </form>
@@ -588,10 +588,10 @@
             <input type="text" id="direccion" name="direccion" required>
 
             <label for="latitud">Latitud</label>
-            <input type="number" id="create-latitud" name="latitud" step="0.000001" required>
+            <input type="number" id="create-latitud" name="latitud" step="0.00000001" required>
 
             <label for="longitud">Longitud</label>
-            <input type="number" id="longitudDestacada" name="longitud" step="0.000001" required>
+            <input type="number" id="longitudDestacada" name="longitud" step="0.00000001" required>
 
             <label for="tipoMarcador">Tipo Marcador</label>
             <select id="tipoMarcador" name="tipoMarcador" required>
@@ -625,10 +625,10 @@
             <input type="text" id="edit-direccion" name="direccion" required>
 
             <label for="edit-latitudDestacada">Latitud</label>
-            <input type="number" id="edit-latitudDestacada" name="latitud" step="0.000001" required>
+            <input type="number" id="edit-latitudDestacada" name="latitud" step="0.00000001" required>
 
             <label for="edit-longitudDestacada">Longitud</label>
-            <input type="number" id="edit-longitudDestacada" name="longitud" step="0.000001" required>
+            <input type="number" id="edit-longitudDestacada" name="longitud" step="0.00000001" required>
 
             <label for="edit-tipo-marcador">Tipo Marcador</label>
             <select id="edit-tipo-marcador" name="tipoMarcador" required>
