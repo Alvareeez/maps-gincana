@@ -30,26 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', (e) => {
             const btn = e.currentTarget;
             
-            // Obtener datos del botón
+            // Obtener datos del botón (quitamos id_ganador)
             const gincanaId = btn.getAttribute('data-id');
             const nombre = btn.getAttribute('data-nombre');
             const estado = btn.getAttribute('data-estado');
             const cantidadJugadores = btn.getAttribute('data-cantidad_jugadores');
             const cantidadGrupos = btn.getAttribute('data-cantidad_grupos');
-            const idGanador = btn.getAttribute('data-id_ganador');
 
-            // Debug: Mostrar valores en consola
-            console.log('Datos de la gincana:', {
-                gincanaId, nombre, estado, cantidadJugadores, cantidadGrupos, idGanador
-            });
-
-            // Establecer valores en el formulario
+            // Establecer valores en el formulario (quitamos id_ganador)
             document.getElementById('edit-gincana-id').value = gincanaId;
             document.getElementById('edit-nombre-gincana').value = nombre;
             document.getElementById('edit-estado').value = estado;
             document.getElementById('edit-cantidad_jugadores').value = cantidadJugadores;
             document.getElementById('edit-cantidad_grupos').value = cantidadGrupos;
-            document.getElementById('edit-id_ganador').value = idGanador;
             
             // Actualizar acción del formulario
             const editForm = document.getElementById('edit-gincana-form');

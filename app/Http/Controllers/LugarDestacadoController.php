@@ -12,15 +12,30 @@ class LugarDestacadoController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = LugarDestacado::with('etiquetas', 'tipoMarcador'); // Cargar relaciones de etiquetas
+            $query = LugarDestacado::with(['etiquetas', 'tipoMarcador', 'favoritos' => function ($q) {
+                $q->where('id_lista', 1); // ID de lista predeterminada
+            }]);
 
+            // Filtro por etiqueta
             if ($request->has('etiqueta') && $request->etiqueta) {
                 $query->whereHas('etiquetas', function ($q) use ($request) {
                     $q->where('etiquetas.id', $request->etiqueta);
                 });
             }
 
-            $lugares = $query->get();
+            // Filtro por favoritos
+            if ($request->has('favoritos')) {
+                $favoritos = $request->favoritos === 'true';
+                $query->whereHas('favoritos', function ($q) use ($favoritos) {
+                    $q->where('id_lista', 1);
+                }, $favoritos ? '>=' : '=', $favoritos ? 1 : 0);
+            }
+
+            $lugares = $query->get()->map(function ($lugar) {
+                $lugar->esFavorito = $lugar->favoritos->isNotEmpty();
+                return $lugar;
+            });
+
             return response()->json($lugares);
         } catch (\Exception $e) {
             return response()->json([
@@ -133,18 +148,12 @@ class LugarDestacadoController extends Controller
     {
         $request->validate([
             'lugar_destacado_id' => 'required|exists:lugares_destacados,id',
-            'tipoMarcador' => 'required|exists:tipo_marcador,id' // Cambiado a required
+            'tipoMarcador' => 'required|exists:tipo_marcador,id'
         ]);
 
         try {
-            $idListaFija = 1; // ID de lista predeterminada
+            $idListaFija = 1;
 
-            // Verifica si existe la lista predeterminada
-            // if (!Lista::find($idListaFija)) {
-            //     throw new \Exception('La lista predeterminada no existe');
-            // }
-
-            // Verificar si ya existe
             if (Favorito::where('id_lista', $idListaFija)
                 ->where('lugar_destacado_id', $request->lugar_destacado_id)
                 ->exists()
@@ -164,14 +173,45 @@ class LugarDestacadoController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Lugar añadido a favoritos',
-                'data' => $favorito
+                'data' => $favorito,
+                'esFavorito' => true // Añade esta línea
             ]);
         } catch (\Exception $e) {
-            // \Log::error('Error en addToFavorites: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al añadir a favoritos: ' . $e->getMessage(),
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    // App/Http/Controllers/LugarDestacadoController.php
+    public function quitarDeFavoritos($id)
+    {
+        try {
+            $idListaFija = 1; // ID de lista predeterminada (mismo que en addToFavorites)
+
+            // Buscar y eliminar el favorito
+            $favorito = Favorito::where('id_lista', $idListaFija)
+                ->where('lugar_destacado_id', $id)
+                ->first();
+
+            if (!$favorito) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El lugar no estaba en favoritos'
+                ], 404);
+            }
+
+            $favorito->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lugar quitado de favoritos correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al quitar de favoritos: ' . $e->getMessage()
             ], 500);
         }
     }

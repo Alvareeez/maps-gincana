@@ -11,7 +11,9 @@
 
 @section('content')
     <div class="container text-center mt-5">
-        <div id="contenedorGincanas" class="row justify-content-center">
+        <div id="contenedorGincanas" 
+            class="row justify-content-center"
+            data-gincanas-url="{{ route('gincana.gincanas-abiertas') }}">
             <!-- Aquí se cargarán las gincanas dinámicamente -->
         </div>
     </div>

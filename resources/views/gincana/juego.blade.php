@@ -12,12 +12,21 @@
                         <button type="submit" class="btn btn-danger">Salir del grupo</button>
                     </form>
                 </div>
-                <div class="card-body">
-                    <h4>Has entrado en la gincana #{{ $id }}</h4>
-                    <p>Aquí irá el contenido del juego...</p>
+                <div class="card-body" id="estado-juego">
+                    <!-- Aquí se cargará dinámicamente el contenido -->
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p>Cargando estado del juego...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection 
+
+@push('scripts')
+<script src="{{ asset('js/gincana/juego.js') }}" data-gincana-id="{{ $id }}"></script>
+@endpush
+@endsection

@@ -4,7 +4,7 @@ body {
     background-color: #111;
     color: #fff;
     margin: 0;
-    padding: 20px;
+    padding: 0;
 }
 
 /* Animación de fondo para el área de administración */
@@ -13,6 +13,7 @@ body {
     background-size: 400% 400%;
     animation: adminBackgroundAnimation 15s ease infinite;
     min-height: 100vh;
+    padding: 20px;
 }
 
 @keyframes adminBackgroundAnimation {
@@ -75,7 +76,6 @@ tr:nth-child(even) {
 
 tr:hover {
     background-color: rgba(255, 255, 0, 0.1);
-    transform: scale(1.01);
     transition: all 0.3s ease;
 }
 
@@ -258,7 +258,7 @@ button {
     color: red;
 }
 
-/* Estilos para la navbar de administración */
+/* NAVBAR MEJORADA */
 .admin-navbar {
     background: linear-gradient(90deg, #000000, #222);
     padding: 0.5rem 2rem;
@@ -272,6 +272,7 @@ button {
 .navbar-container {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
@@ -290,15 +291,15 @@ button {
 .navbar-menu {
     display: flex;
     list-style: none;
-    margin-left: 2rem;
+    margin: 0;
     padding: 0;
+    gap: 0.5rem;
 }
 
 .nav-link {
     color: #ddd;
     text-decoration: none;
-    padding: 0.8rem 1.2rem;
-    margin: 0 0.2rem;
+    padding: 0.8rem 1rem;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.9rem;
@@ -306,6 +307,7 @@ button {
     border-radius: 4px;
     transition: all 0.3s ease;
     position: relative;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -376,7 +378,18 @@ tr:hover {
     background-color: rgba(255, 255, 0, 0.1) !important;
 }
 
-/* Responsive */
+/* RESPONSIVE MEJORADO */
+@media (max-width: 992px) {
+    .navbar-menu {
+        gap: 0.3rem;
+    }
+    
+    .nav-link {
+        padding: 0.7rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
 @media (max-width: 768px) {
     table {
         display: block;
@@ -390,19 +403,98 @@ tr:hover {
 
     .navbar-container {
         flex-direction: column;
-        padding: 0.5rem;
+        padding: 1rem;
     }
     
     .navbar-menu {
-        margin-left: 0;
         margin-top: 1rem;
+        width: 100%;
         flex-wrap: wrap;
         justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .nav-link.active::after {
+        width: 80%;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .navbar-menu {
+        gap: 0.3rem;
     }
     
     .nav-link {
         padding: 0.5rem;
-        font-size: 0.8rem;
-        margin: 0.1rem;
+        font-size: 0.75rem;
+        min-width: 90px;
+    }
+    
+    th, td {
+        padding: 8px 10px;
+    }
+    
+    button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Menú hamburguesa opcional */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+/* Añade esto a tus estilos responsive */
+@media (max-width: 768px) {
+    .nav-link {
+        min-width: max-content; /* Asegura que el texto completo se muestre */
+        padding: 0.6rem 0.8rem !important; /* Espaciado consistente */
+        font-size: 0.8rem !important; /* Tamaño fijo para móviles */
+        white-space: nowrap; /* Evita saltos de línea */
+    }
+
+    .navbar-menu {
+        overflow-x: auto; /* Permite scroll horizontal si es necesario */
+        -webkit-overflow-scrolling: touch; /* Scroll suave en móviles */
+        padding-bottom: 5px; /* Espacio para el scroll */
+        flex-wrap: nowrap; /* Evita que los items se envuelvan */
+        justify-content: flex-start; /* Alinea a la izquierda */
+    }
+
+    .navbar-container {
+        overflow: visible; /* Asegura que todo el contenido sea visible */
+    }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .navbar-menu {
+        gap: 0.3rem;
+    }
+    
+    .nav-link {
+        padding: 0.5rem 0.6rem !important;
+        font-size: 0.75rem !important;
     }
 }

@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(TipoMarcadorSeeder::class);
 
+        $this->call(Etiqueta::class);
+
     }
 }
 

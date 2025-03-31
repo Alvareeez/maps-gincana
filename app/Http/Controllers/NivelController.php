@@ -29,6 +29,15 @@ class NivelController extends Controller
             'id_gincana' => 'required|exists:gincanas,id',
         ]);
 
+        // Validar límite de 4 niveles por gincana
+        $nivelesCount = Nivel::where('id_gincana', $validated['id_gincana'])->count();
+        if ($nivelesCount >= 4) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pueden agregar más de 4 niveles por gincana'
+            ], 422);
+        }
+
         $nivel = Nivel::create($validated);
 
         return response()->json([
@@ -48,6 +57,17 @@ class NivelController extends Controller
             'id_prueba' => 'required|exists:pruebas,id',
             'id_gincana' => 'required|exists:gincanas,id',
         ]);
+
+        // Validar límite solo si cambia la gincana
+        if ($nivel->id_gincana != $validated['id_gincana']) {
+            $nivelesCount = Nivel::where('id_gincana', $validated['id_gincana'])->count();
+            if ($nivelesCount >= 4) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pueden agregar más de 4 niveles por gincana'
+                ], 422);
+            }
+        }
 
         $nivel->update($validated);
 

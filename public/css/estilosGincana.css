@@ -167,3 +167,154 @@ header .back-button:hover {
     padding: 0.5rem;
 }
 
+/* En tu archivo CSS */
+.card.mi-grupo {
+    border: 2px solid #0d6efd;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+}
+
+.progress {
+    height: 20px;
+}
+
+.progress-bar {
+    background-color: #198754;
+    transition: width 0.5s ease;
+}
+
+.actualizando {
+    opacity: 0.7;
+    position: relative;
+}
+
+.actualizando::after {
+    content: "Actualizando...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+}
+
+.gincana-btn {
+    transition: all 0.3s ease;
+}
+
+.gincana-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Añade esto a tu archivo CSS */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(
+        45deg,
+        rgba(255,255,255,0.15) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255,255,255,0.15) 50%,
+        rgba(255,255,255,0.15) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 1rem 1rem;
+}
+
+.border-primary {
+    border-color: #0d6efd !important;
+}
+
+/* Añade esto a tu archivo CSS */
+#mapa-container {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.leaflet-popup-content {
+    min-width: 200px;
+}
+
+.leaflet-popup-content button {
+    width: 100%;
+}
+
+.modal-backdrop {
+    z-index: 1040; /* Asegura que esté detrás del modal pero sobre el mapa */
+}
+
+.leaflet-top {
+    z-index: 1000; /* Asegura que los controles del mapa estén sobre otros elementos */
+}
+
+/* Añade esto a tu archivo CSS */
+#mapa-container {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.leaflet-popup-content {
+    min-width: 200px;
+}
+
+.leaflet-popup-content button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.leaflet-top {
+    z-index: 1000;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Estilos para los modales */
+.modal-content {
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.modal-title {
+    font-weight: bold;
+    color: #212529;
+}
+
+/* Estilos para el marcador del jugador */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
+
+/* Estilos para el radio de visibilidad */
+.leaflet-overlay-pane svg path {
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}

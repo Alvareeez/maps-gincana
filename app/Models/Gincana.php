@@ -27,4 +27,9 @@ class Gincana extends Model
     {
         return $this->hasMany(Grupo::class, 'id_gincana');
     }
+
+    public function niveles()
+    {
+        return $this->hasMany(Nivel::class, 'id_gincana');
+    }
 }

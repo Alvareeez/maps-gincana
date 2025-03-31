@@ -1,92 +1,128 @@
+// Definir variables globales al inicio del archivo
 let estaCargando = false;
+let intervaloActualizacion = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const contenedorGrupos = document.getElementById('contenedorGrupos');
-    let id = window.location.pathname.split('/').pop();
-    actualizarGrupos(id);
-    setInterval(function() {
-        actualizarGrupos(id);
-    }, 10000);
+    const gincanaId = window.location.pathname.split('/').pop();
+    
+    // Configurar URL correctamente usando la ruta definida en Laravel
+    const gruposUrl = `/gincana/api/grupos-disponibles/${gincanaId}`;
+    
+    // Cargar inmediatamente
+    actualizarGrupos(gruposUrl);
+    
+    // Configurar intervalo de actualización
+    intervaloActualizacion = setInterval(() => actualizarGrupos(gruposUrl), 10000);
+    
+    // Limpiar intervalo al salir de la página
+    window.addEventListener('beforeunload', limpiarIntervalo);
 });
 
-function actualizarGrupos(id) {
+function limpiarIntervalo() {
+    if (intervaloActualizacion) {
+        clearInterval(intervaloActualizacion);
+    }
+}
+
+async function actualizarGrupos(url) {
+    // Evitar múltiples llamadas simultáneas
     if (estaCargando) {
         return;
     }
+    
     estaCargando = true;
-
-    fetch(`/gincana/api/gruposDisponibles/${id}`, {
-        method: 'GET'
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
-        let contenido = "";
-        if (data.estado == 'no disponible') {
-            window.location.href = '/gincana';
-        } else if (data.estado == 'encontrado') {
-            contenido = '<div class="row justify-content-center">';
-            data.respuesta.forEach(grupo => {
-                contenido += `
-                    <div class="col-12 col-md-6 col-lg-4 mb-3">
-                        <form action="/gincana/api/unirse" method="POST">
-                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-                            <input type="hidden" name="id_grupo" value="${grupo.id}">
-                            <button type="submit" class="btn btn-outline-warning btn-block py-3 gincana-btn">
-                                <strong>${grupo.nombre}
-                                (${grupo.jugadores_actuales}/${grupo.max_jugadores})
-                                </strong>
-                            </button>
-                        </form>
-                    </div>
-                `;
-            });
-            contenido += '</div>';
-        } else {
-            contenido = `<div class="col-12"><p class="text-white">No se ha encontrado ningún grupo disponible.</p></div>`;
-        }
-        contenedorGrupos.innerHTML = contenido;
-    })
-    .catch(error => {
-        console.error('Error al hacer la solicitud:', error);
-        contenedorGrupos.innerHTML = '<p>Ha habido un error: ' + error + '</p>';
-    })
-    .finally(() => {
-        estaCargando = false;
-    });
-}
-
-function mostrarGrupos(grupos) {
     const contenedorGrupos = document.getElementById('contenedorGrupos');
-    contenedorGrupos.innerHTML = '';
+    
+    try {
+        // Mostrar estado de carga
+        contenedorGrupos.classList.add('cargando');
+        contenedorGrupos.innerHTML = `
+            <div class="col-12 text-center">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando grupos...</p>
+            </div>
+        `;
 
-    grupos.forEach(grupo => {
-        const li = document.createElement('li');
-        li.className = 'list-group-item';
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        // Verificar si la respuesta es OK
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        // Parsear la respuesta JSON
+        const {success, data, message, redirect} = await response.json();
         
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/gincana/api/unirse';
+        // Redirigir si es necesario
+        if (redirect) {
+            window.location.href = redirect;
+            return;
+        }
+
+        // Manejar respuesta no exitosa
+        if (!success) {
+            throw new Error(message || 'Error al cargar grupos');
+        }
+
+        // Generar contenido HTML para los grupos disponibles
+        let contenido = '';
         
-        const tokenInput = document.createElement('input');
-        tokenInput.type = 'hidden';
-        tokenInput.name = '_token';
-        tokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        // Filtrar solo grupos disponibles
+        const gruposDisponibles = data.filter(grupo => grupo.disponible);
         
-        const grupoInput = document.createElement('input');
-        grupoInput.type = 'hidden';
-        grupoInput.name = 'id_grupo';
-        grupoInput.value = grupo.id;
+        if (gruposDisponibles.length > 0) {
+            contenido = gruposDisponibles.map(grupo => `
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <form action="/gincana/unirse" method="POST" class="join-form">
+                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                        <input type="hidden" name="id_grupo" value="${grupo.id}">
+                        <button type="submit" class="btn btn-outline-warning btn-block py-3 gincana-btn">
+                            <strong>${grupo.nombre}</strong>
+                            <div class="small mt-1">
+                                ${grupo.jugadores_actuales}/${grupo.max_jugadores} jugadores
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            `).join('');
+        } else {
+            contenido = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No hay grupos disponibles en este momento.
+                    </div>
+                </div>
+            `;
+        }
         
-        const button = document.createElement('button');
-        button.type = 'submit';
-        button.className = 'btn btn-primary w-100';
-        button.textContent = `${grupo.nombre} (${grupo.jugadores_actuales}/${grupo.max_jugadores})`;
+        // Actualizar el DOM
+        contenedorGrupos.innerHTML = contenido;
         
-        form.appendChild(tokenInput);
-        form.appendChild(grupoInput);
-        form.appendChild(button);
-        li.appendChild(form);
-        contenedorGrupos.appendChild(li);
-    });
+    } catch (error) {
+        console.error('Error al cargar grupos:', error);
+        contenedorGrupos.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    Error al cargar grupos: ${error.message}
+                </div>
+                <button onclick="window.location.reload()" class="btn btn-sm btn-secondary">
+                    Recargar
+                </button>
+            </div>
+        `;
+    } finally {
+        // Restablecer estado
+        estaCargando = false;
+        contenedorGrupos.classList.remove('cargando');
+    }
 }
