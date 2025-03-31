@@ -31,17 +31,60 @@ var userLocationIcon = L.icon({
 });
 
 // Intentar localizar al usuario
-map.locate({ setView: true, maxZoom: 15 });
+map.locate({
+    setView: true,
+    maxZoom: 15,
+    watch: true,          // Activa el modo de seguimiento
+    enableHighAccuracy: true // Mayor precisión (opcional)
+});
 
+// Crear un control personalizado para el botón de home
+var homeControl = L.Control.extend({
+    options: {
+        position: 'bottomright'
+    },
+    onAdd: function (map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        container.style.marginBottom = '10px';
+        container.style.backgroundColor = 'white';
+        container.style.borderRadius = '4px';
+
+        var button = L.DomUtil.create('a', 'leaflet-control-zoom-in', container);
+        button.href = '/home';
+        button.innerHTML = '🏠';
+        button.style.fontSize = '20px';
+        button.style.lineHeight = '26px';
+        button.style.width = '30px';
+        button.style.height = '30px';
+        button.style.display = 'block';
+        button.style.textAlign = 'center';
+        button.style.textDecoration = 'none';
+
+        // Prevenir que el clic en el botón afecte al mapa
+        L.DomEvent.disableClickPropagation(button);
+
+        return container;
+    }
+});
+
+// Añadir el control personalizado al mapa
+new homeControl().addTo(map);
 // Evento que se activa cuando se encuentra la ubicación del usuario
 map.on('locationfound', function (e) {
     userLat = e.latitude;
     userLng = e.longitude;
 
-    // Añadir un marcador con el icono personalizado en la ubicación del usuario
-    L.marker([userLat, userLng], { icon: userLocationIcon }).addTo(map)
+    // Eliminar marcador anterior si existe
+    if (window.userMarker) {
+        map.removeLayer(window.userMarker);
+    }
+
+    // Crear nuevo marcador
+    window.userMarker = L.marker([userLat, userLng], { icon: userLocationIcon })
         .bindPopup('Estás aquí.')
-        .openPopup();// Eliminar el círculo anterior si existe
+        .addTo(map);
+
+    // Actualizar círculo de radio
     if (userLocationCircle) {
         map.removeLayer(userLocationCircle);
     }
