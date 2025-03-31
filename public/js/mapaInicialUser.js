@@ -18,6 +18,37 @@ document.getElementById('buscador').addEventListener('click', function (e) {
 L.control.zoom({
     position: 'bottomright'
 }).addTo(map);
+// Crear un control personalizado para el botón de home
+var homeControl = L.Control.extend({
+    options: {
+        position: 'bottomright'
+    },
+    onAdd: function (map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        container.style.marginBottom = '10px';
+        container.style.backgroundColor = 'white';
+        container.style.borderRadius = '4px';
+
+        var button = L.DomUtil.create('a', 'leaflet-control-zoom-in', container);
+        button.href = '/home';
+        button.innerHTML = '🏠';
+        button.style.fontSize = '20px';
+        button.style.lineHeight = '26px';
+        button.style.width = '30px';
+        button.style.height = '30px';
+        button.style.display = 'block';
+        button.style.textAlign = 'center';
+        button.style.textDecoration = 'none';
+
+        // Prevenir que el clic en el botón afecte al mapa
+        L.DomEvent.disableClickPropagation(button);
+
+        return container;
+    }
+});
+
+// Añadir el control personalizado al mapa
+new homeControl().addTo(map);
 // Añadir una capa de tiles (baldosas) de OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
