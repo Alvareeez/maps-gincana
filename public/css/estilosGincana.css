@@ -5,7 +5,6 @@ body {
     animation: backgroundAnimation 20s ease infinite;
     color: white;
     font-family: Arial, sans-serif;
-    padding-top: 2rem;
 }
 
 /* Botones de gincanas */
@@ -92,7 +91,6 @@ header .header-title {
 
 /* Contenedor del botón "Volver atrás" */
 header .back-button-container {
-    margin-top: 2rem; /* Separación del título */
     margin-bottom: 2rem; /* Espacio inferior opcional */
     text-align: center;
 }
@@ -125,7 +123,6 @@ header .back-button:hover {
 @media (max-width: 768px) {
     header nav {
         font-size: 2.5rem;
-        margin-top: 1.5rem;
     }
 }
 
@@ -317,4 +314,26 @@ header .back-button:hover {
 .leaflet-overlay-pane svg path {
     stroke-linejoin: round;
     stroke-linecap: round;
+}
+
+.alert.alerta-gincana {
+    background-color: rgba(0, 0, 0, 0.792); /* Fondo translúcido */
+    color: yellow; /* Texto amarillo */
+    border: 2px solid yellow; /* Borde amarillo */
+    border-radius: 15px; /* Bordes redondeados */
+    padding: 1.5rem; /* Espaciado interno */
+    text-align: center; /* Centrar texto */
+    font-size: 1.2rem; /* Tamaño de fuente */
+    font-weight: bold; /* Texto en negrita */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra */
+    transition: all 0.3s ease; /* Transición para efectos */
+}
+
+.header-title {
+    text-align: center; /* Centrar el texto horizontalmente */
+    margin: 0 10px; /* Espaciado superior e inferior */
+    font-size: 2rem; /* Tamaño de fuente */
+    font-weight: bold; /* Negrita */
+    color: yellow; /* Color del texto */
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.7); /* Sombra para el texto */
 }

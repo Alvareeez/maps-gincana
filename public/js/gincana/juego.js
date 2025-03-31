@@ -9,6 +9,7 @@ class JuegoGincana {
         this.nivelActual = 1;
         this.modales = {};
         this.gpsIntentos = 0;
+        this.juegoFinalizado = false;
 
         this.init();
     }
@@ -599,6 +600,9 @@ class JuegoGincana {
     }
 
     mostrarFinJuego(ganador) {
+        if (this.juegoFinalizado) return; // evitar mostrar más de una vez
+        this.juegoFinalizado = true;
+        
         // Detener seguimiento GPS si está activo
         if (this.watchId) {
             navigator.geolocation.clearWatch(this.watchId);
@@ -650,6 +654,7 @@ class JuegoGincana {
             </div>
         `;
     }
+    
     
 
     mapaFallback(objetivo) {

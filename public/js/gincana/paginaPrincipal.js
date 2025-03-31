@@ -62,7 +62,7 @@ async function actualizarGincanas() {
         } else {
             contenido = `
                 <div class="col-12">
-                    <div class="alert alert-info">
+                    <div class="alert alert-info alerta-gincana">
                         ${message || 'No hay gincanas disponibles en este momento.'}
                     </div>
                 </div>

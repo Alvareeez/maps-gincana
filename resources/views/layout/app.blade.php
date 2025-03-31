@@ -9,10 +9,11 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">Gincana</a>
+            <img src="{{ asset('img/fondo_GA.png') }}" alt="Logo Gincana" class="navbar-brand-logo" style="height: 40px;">
+            <a class="navbar-brand" href="{{ route('home') }}">Menú</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -40,18 +41,21 @@
             </div>
         </div>
     </nav>
+        <!-- Título principal -->
+        <div class="header-title">
+            @yield('headerTitle') <!-- Aquí va tu título dinámico -->
+        </div>
 
     <main>
         @yield('content')
     </main>
+</header>
+<body>
+@yield('content')
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- Custom JS -->
-    @stack('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@stack('scripts')
 </body>
 </html> 
