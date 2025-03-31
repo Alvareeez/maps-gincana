@@ -336,8 +336,6 @@ function cargarLugaresDestacados() {
                 <b>${lugar.nombre}</b><br>
                 ${lugar.descripcion}<br>
                 Dirección: ${lugar.direccion}<br>
-                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Eliminar</button>
-                <button class="btn btn-secondary btn-sm mt-2" onclick="modificcarLugar(${lugar.id}, ${lugar.latitud}, ${lugar.longitud})">Modificar</button>
                 <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
                 ${esFavorito
                         ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
@@ -363,30 +361,6 @@ function cargarLugaresDestacados() {
         })
         .catch(error => console.error('Error al cargar los lugares destacados:', error));
 }
-// Función para eliminar un lugar destacado de la base de datos
-function eliminarLugar(id, latitud, longitud) {
-    if (confirm('¿Estás seguro de que deseas eliminar este lugar?')) {
-        fetch(`/lugares-destacados/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Lugar destacado eliminado:', data);
-
-                // Eliminar el marcador del mapa
-                const lugarIndex = lugaresDestacados.findIndex(lugar => lugar.id === id);
-                if (lugarIndex !== -1) {
-                    map.removeLayer(lugaresDestacados[lugarIndex].marker);
-                    lugaresDestacados.splice(lugarIndex, 1);
-                }
-            })
-            .catch(error => console.error('Error al eliminar el lugar destacado:', error));
-    }
-}
-
 // Función para crear una ruta hacia un marcador seleccionado
 function crearRuta(destLat, destLng) {
     // Verificar si la ubicación del usuario está disponible
@@ -414,32 +388,6 @@ function crearRuta(destLat, destLng) {
     }).addTo(map);
 }
 
-function guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador, etiquetas) {
-    fetch('/lugares-destacados', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            nombre,
-            descripcion,
-            direccion,
-            latitud,
-            longitud,
-            tipoMarcador,
-            etiquetas
-        })
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Lugar destacado guardado:', data);
-            // Recargar los lugares para incluir el nuevo
-            filtrarPorEtiqueta(document.getElementById('filtro-etiqueta').value);
-        })
-        .catch(error => console.error('Error al guardar el lugar destacado:', error));
-}
-
 // Función para cargar los tipos de marcadores desde la base de datos
 function cargarTiposMarcadores() {
     return fetch('/tipo-marcadores')
@@ -453,71 +401,6 @@ function cargarTiposMarcadores() {
             return '<option value="">Error al cargar</option>'; // Mostrar un mensaje de error en el select
         });
 }
-
-// Habilitar la funcionalidad de añadir marcadores manualmente
-map.on('click', async function (e) {
-    // Verificar si el clic fue en un elemento que no es el mapa
-    if (e.originalEvent && e.originalEvent.target !== map._container) {
-        return;
-    }
-
-    var latlng = e.latlng;
-
-    // Cargar los tipos de marcadores y etiquetas
-    const [opcionesTipoMarcador, opcionesEtiquetas] = await Promise.all([
-        cargarTiposMarcadores(),
-        cargarEtiquetas()
-    ]);
-
-    // Mostrar el modal con campos para etiquetas
-    Swal.fire({
-        title: 'Crear un nuevo lugar',
-        html: `
-            <div class="my-3">
-                <input type="text" id="nombre" class="form-control my-3" placeholder="Nombre">
-                <input type="text" id="descripcion" class="form-control my-3" placeholder="Descripción">
-                <input type="text" id="direccion" class="form-control my-3" placeholder="Dirección">
-                <select id="tipoMarcador" class="form-control my-3">
-                    ${opcionesTipoMarcador}
-                </select>
-                <select id="etiquetas" class="form-control my-3" multiple>
-                    ${opcionesEtiquetas}
-                </select>
-                <input type="number" id="latitud" class="form-control my-3" value="${latlng.lat}" readonly>
-                <input type="number" id="longitud" class="form-control my-3" value="${latlng.lng}" readonly>
-            </div>
-        `,
-        confirmButtonText: 'Guardar',
-        showCancelButton: true,
-        cancelButtonText: 'Cancelar',
-        focusConfirm: false,
-        preConfirm: () => {
-            const nombre = document.getElementById('nombre').value;
-            const descripcion = document.getElementById('descripcion').value;
-            const direccion = document.getElementById('direccion').value;
-            const tipoMarcador = document.getElementById('tipoMarcador').value;
-            const latitud = document.getElementById('latitud').value;
-            const longitud = document.getElementById('longitud').value;
-
-            // Obtener etiquetas seleccionadas
-            const etiquetasSelect = document.getElementById('etiquetas');
-            const etiquetas = Array.from(etiquetasSelect.selectedOptions).map(option => option.value);
-
-            if (!nombre || !descripcion || !direccion || !tipoMarcador) {
-                Swal.showValidationMessage('Por favor, completa todos los campos obligatorios');
-                return false;
-            }
-
-            return { nombre, descripcion, direccion, tipoMarcador, latitud, longitud, etiquetas };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const { nombre, descripcion, direccion, tipoMarcador, latitud, longitud, etiquetas } = result.value;
-            guardarLugarDestacado(nombre, descripcion, direccion, latitud, longitud, tipoMarcador, etiquetas);
-        }
-    });
-});
-
 // Lista para almacenar los lugares destacados
 var lugaresDestacados = [];
 
@@ -563,8 +446,6 @@ function buscarLugar(query) {
                         ${lugar.descripcion}<br>
                         <small>Etiquetas: ${etiquetasNames}</small><br>
                         Dirección: ${lugar.direccion}${distanciaInfo}<br>
-                        <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
-                        <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
                         <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
                         ${lugar.esFavorito
                             ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
@@ -762,8 +643,6 @@ function aplicarFiltros() {
                 ${lugar.descripcion}<br>
                 <small>Etiquetas: ${etiquetasNames}</small><br>
                 Dirección: ${lugar.direccion}${distanciaInfo}<br>
-                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
-                <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
                 <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
                 ${lugar.esFavorito
                         ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`
@@ -860,8 +739,6 @@ function filtrarPorEtiqueta(etiquetaId) {
                         ${lugar.descripcion}<br>
                         <small>Etiquetas: ${etiquetasNames}</small><br>
                         Dirección: ${lugar.direccion}<br>
-                        <button class="btn btn-danger btn-sm mt-2" onclick="eliminarLugar(${lugar.id})">Eliminar</button>
-                        <button class="btn btn-secondary btn-sm mt-2" onclick="modificarLugar(${lugar.id})">Modificar</button>
                         <button class="btn btn-primary btn-sm mt-2" onclick="crearRuta(${lugar.latitud}, ${lugar.longitud})">Ir aquí</button>
                         ${lugar.esFavorito
                         ? `<button class="btn btn-warning btn-sm mt-2" onclick="quitarDeFavoritos(${lugar.id})">Quitar de favoritos</button>`

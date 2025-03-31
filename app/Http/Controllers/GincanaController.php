@@ -334,53 +334,132 @@ class GincanaController extends Controller
 
     // --------- APIs DEL JUEGO ---------
 
+    public function verificarEstadoGincana($id)
+    {
+        $gincana = Gincana::find($id);
+
+        if (!$gincana) {
+            return response()->json(['disponible' => false]);
+        }
+
+        return response()->json([
+            'disponible' => $gincana->estado === 'abierta'
+        ]);
+    }
+
+    public function verificarDisponibilidadGrupo($id)
+    {
+        $grupo = Grupo::with('gincana')->find($id);
+
+        if (!$grupo) {
+            return response()->json(['disponible' => false]);
+        }
+
+        // Solo permitir si la gincana está ABIERTA
+        if ($grupo->gincana->estado !== 'abierta') {
+            return response()->json(['disponible' => false]);
+        }
+
+        // Verificar si el grupo tiene espacio
+        $jugadores = Jugador::where('id_grupo', $id)->count();
+        $max = $grupo->gincana->cantidad_jugadores;
+
+        return response()->json(['disponible' => $jugadores < $max]);
+    }
+
+
+
     /**
      * API para verificar el estado del juego
      */
     public function estadoJuego($gincanaId)
     {
-        $jugador = Jugador::with(['grupo.gincana'])
-            ->where('id_usuario', Auth::id())
-            ->firstOrFail();
+        try {
+            $jugador = Jugador::with(['grupo.gincana'])
+                ->where('id_usuario', Auth::id())
+                ->first();
 
-        // Verificar que el jugador pertenece a esta gincana
-        if ($jugador->grupo->id_gincana != $gincanaId) {
-            return response()->json(['error' => 'No perteneces a esta gincana'], 403);
-        }
+            $gincana = Gincana::find($gincanaId);
 
-        $gincana = $jugador->grupo->gincana;
-        $todosConectados = $this->verificarGruposCompletos($gincanaId);
+            // Si ya no tiene jugador (fue eliminado tras ganar o perder), aún puede ver pantalla final
+            if (!$jugador) {
+                $nombreGanador = $gincana?->ganadorGrupo?->nombre ?? null;
 
-        if ($todosConectados) {
-            Gincana::where('id', $gincanaId)
-                ->where('estado', 'abierta')
-                ->update(['estado' => 'ocupada']);
+                return response()->json([
+                    'estado' => $gincana?->id_ganador ? 'completado' : 'esperando',
+                    'grupos' => [],
+                    'ganador_anterior' => $nombreGanador,
+                    'ganador' => false,
+                    'message' => 'La partida ha finalizado'
+                ]);
+            }
+
+            // Verificar que pertenece a la gincana
+            if ($jugador->grupo->id_gincana != $gincanaId) {
+                return response()->json(['error' => 'No perteneces a esta gincana'], 403);
+            }
+
+            $todosConectados = $this->verificarGruposCompletos($gincanaId);
+
+            if ($todosConectados && $gincana->estado === 'abierta') {
+                Gincana::where('id', $gincanaId)->update(['estado' => 'ocupada']);
+            }
+
+            $nombreGanador = null;
+            $esGanador = false;
+
+            if ($gincana->id_ganador) {
+                $grupoGanador = Grupo::find($gincana->id_ganador);
+                $nombreGanador = $grupoGanador?->nombre;
+                $esGanador = $grupoGanador && $jugador->grupo->id === $grupoGanador->id;
+            }
+
+            // Obtener info de grupos
+            $grupos = Grupo::where('id_gincana', $gincanaId)
+                ->withCount('jugadores')
+                ->get()
+                ->map(function($grupo) use ($jugador, $gincana) {
+                    return [
+                        'id' => $grupo->id,
+                        'nombre' => $grupo->nombre,
+                        'jugadores' => $grupo->jugadores_count,
+                        'max_jugadores' => $grupo->gincana->cantidad_jugadores,
+                        'es_mi_grupo' => $grupo->id === $jugador->grupo->id,
+                        'jugadores_completados' => Jugador::where('id_grupo', $grupo->id)
+                            ->where('completado', true)
+                            ->count()
+                    ];
+                });
+
+            $estado = 'iniciado';
+            if ($gincana->id_ganador) {
+                $estado = 'completado';
+            } elseif ($gincana->estado === 'abierta') {
+                $estado = 'esperando';
+            }
 
             return response()->json([
-                'estado' => 'iniciado',
-                'mensaje' => 'El juego ha comenzado!'
+                'estado' => $estado,
+                'grupos' => $grupos,
+                'ganador_anterior' => $nombreGanador,
+                'ganador' => $esGanador,
+                'message' => match ($estado) {
+                    'esperando' => 'Esperando a que se unan todos los jugadores...',
+                    'iniciado' => 'El juego está en progreso',
+                    'completado' => 'La partida ha terminado'
+                }
             ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en estadoJuego: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error del servidor',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $grupos = Grupo::where('id_gincana', $gincanaId)
-            ->withCount('jugadores')
-            ->get()
-            ->map(function($grupo) use ($jugador) {
-                return [
-                    'id' => $grupo->id,
-                    'nombre' => $grupo->nombre,
-                    'jugadores' => $grupo->jugadores_count,
-                    'max_jugadores' => $grupo->gincana->cantidad_jugadores,
-                    'es_mi_grupo' => $grupo->id === $jugador->id_grupo
-                ];
-            });
-
-        return response()->json([
-            'estado' => 'esperando',
-            'grupos' => $grupos,
-            'mensaje' => 'Esperando a que se unan todos los jugadores...'
-        ]);
     }
+
+
 
     /**
      * API para obtener el nivel actual del jugador
@@ -388,60 +467,51 @@ class GincanaController extends Controller
     public function nivelActual($gincanaId)
     {
         try {
-            // Verificar autenticación
             if (!Auth::check()) {
                 return response()->json(['error' => 'No autenticado'], 401);
             }
 
-            // Obtener jugador y grupo con relaciones necesarias
-            $jugador = Jugador::with(['grupo.gincana.niveles' => function($query) {
-                $query->with(['lugar', 'prueba'])->orderBy('nombre');
-            }])->where('id_usuario', Auth::id())->first();
-            
+            $jugador = Jugador::with(['grupo.gincana'])
+                ->where('id_usuario', Auth::id())
+                ->first();
+
             if (!$jugador) {
                 return response()->json(['error' => 'Jugador no encontrado'], 404);
             }
 
             $grupo = $jugador->grupo;
-            
-            // Verificar que el grupo pertenece a la gincana solicitada
+
             if ($grupo->id_gincana != $gincanaId) {
                 return response()->json(['error' => 'Grupo no pertenece a esta gincana'], 400);
             }
 
-            // Obtener el nivel actual del grupo
-            $nivelActual = $grupo->nivel;
-            
-            // Buscar el nivel correspondiente (los niveles están ordenados)
-            $nivel = $grupo->gincana->niveles->get($nivelActual - 1);
-            
-            if (!$nivel) {
-                // Si no se encuentra, intentar con el primer nivel
-                $nivel = $grupo->gincana->niveles->first();
-                if (!$nivel) {
-                    return response()->json(['error' => 'No hay niveles en esta gincana'], 404);
-                }
-                // Actualizar el nivel del grupo si era incorrecto
-                $grupo->nivel = (int) str_replace('Nivel ', '', $nivel->nombre);
-                $grupo->save();
+            $nivelActual = $grupo->nivel; // Último completado
+            $niveles = Nivel::with(['lugar', 'prueba'])
+                ->where('id_gincana', $gincanaId)
+                ->orderBy('id')
+                ->get();
+
+            // Si ya completó todos los niveles
+            if ($nivelActual >= $niveles->count()) {
+                return response()->json([
+                    'estado' => 'completado',
+                    'ganador' => $grupo->id == $grupo->gincana->id_ganador
+                ]);
             }
 
-            // Verificar que el nivel tiene las relaciones necesarias
-            if (!$nivel->lugar || !$nivel->prueba) {
-                return response()->json(['error' => 'Datos del nivel incompletos'], 500);
-            }
+            $nivel = $niveles[$nivelActual];
 
             return response()->json([
                 'estado' => 'iniciado',
-                'nivel' => $nivelActual,
+                'nivel' => $nivelActual + 1,
                 'pista' => $nivel->lugar->pista,
                 'pregunta' => $nivel->prueba->pregunta,
                 'ubicacion' => [
                     'latitud' => $nivel->lugar->latitud,
                     'longitud' => $nivel->lugar->longitud
-                ]
+                ],
+                'total_niveles' => $niveles->count()
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error en nivelActual: ' . $e->getMessage());
             return response()->json([
@@ -451,96 +521,109 @@ class GincanaController extends Controller
         }
     }
 
+
+
     /**
      * Procesa la respuesta del jugador a una prueba
      */
     public function responderPrueba(Request $request, $gincanaId)
     {
-        $request->validate([
-            'respuesta' => 'required|string'
-        ]);
-
-        $jugador = Jugador::where('id_usuario', Auth::id())
-            ->whereHas('grupo', function($q) use ($gincanaId) {
-                $q->where('id_gincana', $gincanaId);
-            })
-            ->firstOrFail();
-
-        $grupo = $jugador->grupo;
-        $nivelActual = $grupo->nivel;
-
-        $nivel = Nivel::with(['prueba'])
-            ->where('id_gincana', $gincanaId)
-            ->where('nombre', 'Nivel '.$nivelActual)
-            ->firstOrFail();
-
         DB::beginTransaction();
         try {
+            $jugador = Jugador::with(['grupo.gincana'])
+                ->where('id_usuario', Auth::id())
+                ->firstOrFail();
+
+            $grupo = $jugador->grupo;
+
+            if ($grupo->id_gincana != $gincanaId) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'No perteneces a esta gincana'
+                ], 403);
+            }
+
+            $nivelActual = $grupo->nivel;
+
+            $niveles = Nivel::with('prueba')
+                ->where('id_gincana', $gincanaId)
+                ->orderBy('id')
+                ->get();
+
+            if ($niveles->isEmpty() || $nivelActual < 0 || $nivelActual >= $niveles->count()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Nivel actual inválido o no encontrado.'
+                ], 404);
+            }
+
+            $nivel = $niveles[$nivelActual];
+
             $respuestaCorrecta = strtolower(trim($nivel->prueba->respuesta));
             $respuestaUsuario = strtolower(trim($request->respuesta));
-            
-            if ($respuestaUsuario === $respuestaCorrecta) {
-                $jugador->completado = true;
-                $jugador->save();
-                
-                // Verificar si todos los jugadores han completado el nivel
-                $jugadoresCompletados = Jugador::where('id_grupo', $grupo->id)
-                    ->where('completado', true)
-                    ->count();
-                
-                $totalJugadores = $grupo->gincana->cantidad_jugadores;
-                
-                if ($jugadoresCompletados >= $totalJugadores) {
-                    // Avanzar al siguiente nivel
-                    $nuevoNivel = $nivelActual + 1;
-                    
-                    // Verificar si es el último nivel
-                    $ultimoNivel = Nivel::where('id_gincana', $gincanaId)
-                        ->orderBy('nombre', 'desc')
-                        ->first();
-                    
-                    if ($nuevoNivel > (int) str_replace('Nivel ', '', $ultimoNivel->nombre)) {
-                        // Juego completado
-                        $grupo->gincana->estado = 'completada';
-                        $grupo->gincana->id_ganador = $grupo->id;
-                        $grupo->gincana->save();
-                        
-                        DB::commit();
-                        
-                        return response()->json([
-                            'estado' => 'completado',
-                            'ganador' => true
-                        ]);
-                    } else {
-                        // Avanzar al siguiente nivel
-                        $grupo->nivel = $nuevoNivel;
-                        $grupo->save();
-                        
-                        // Reiniciar estado de completado para todos los jugadores
-                        Jugador::where('id_grupo', $grupo->id)
-                            ->update(['completado' => false]);
-                        
-                        DB::commit();
-                        
-                        return response()->json([
-                            'estado' => 'nivel_completado',
-                            'nuevo_nivel' => $nuevoNivel
-                        ]);
-                    }
-                }
-                
-                DB::commit();
-                return response()->json(['estado' => 'correcto', 'completado' => true]);
-            } else {
-                DB::commit();
-                return response()->json(['estado' => 'incorrecto', 'completado' => false]);
+
+            if ($respuestaUsuario !== $respuestaCorrecta) {
+                return response()->json([
+                    'correcto' => false,
+                    'message' => 'Respuesta incorrecta. Inténtalo de nuevo.'
+                ]);
             }
+
+            $jugador->completado = true;
+            $jugador->save();
+
+            $jugadoresCompletados = Jugador::where('id_grupo', $grupo->id)
+                ->where('completado', true)
+                ->count();
+
+            $totalJugadores = $grupo->gincana->cantidad_jugadores;
+
+            if ($jugadoresCompletados >= $totalJugadores) {
+                if ($nivelActual + 1 >= $niveles->count()) {
+                    // Establecer ganador, pero no reiniciar ni eliminar nada
+                    Gincana::where('id', $grupo->id_gincana)->update([
+                        'id_ganador' => $grupo->id,
+                        'estado' => 'ocupada'
+                    ]);
+
+                    DB::commit();
+                    return response()->json([
+                        'completado' => true,
+                        'ganador' => true,
+                        'message' => '¡Felicidades! Tu grupo ha ganado. La gincana ha finalizado.'
+                    ]);
+                }
+
+                $grupo->nivel = $nivelActual + 1;
+                $grupo->save();
+
+                Jugador::where('id_grupo', $grupo->id)
+                    ->update(['completado' => false]);
+
+                DB::commit();
+                return response()->json([
+                    'nivel_completado' => true,
+                    'nuevo_nivel' => $nivelActual + 1,
+                    'message' => '¡Nivel completado! Preparando siguiente nivel...'
+                ]);
+            }
+
+            DB::commit();
+            return response()->json([
+                'correcto' => true,
+                'message' => 'Respuesta correcta. Esperando al resto del grupo...'
+            ]);
+
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             Log::error('Error en responderPrueba: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => true,
+                'message' => 'Error al procesar respuesta: ' . $e->getMessage()
+            ], 500);
         }
     }
+
 
     // --------- ADMINISTRACIÓN ---------
     

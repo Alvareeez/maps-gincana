@@ -9,6 +9,9 @@ use App\Models\Lugar;
 use App\Models\Nivel;
 use App\Models\Gincana;
 use App\Models\Grupo;
+use App\Models\LugarDestacado;
+use App\Models\Etiqueta;
+use App\Models\TipoMarcador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,7 +30,10 @@ class AdminController extends Controller
             $niveles = Nivel::all();
             $gincanas = Gincana::all();
             $grupos = Grupo::all();
-            return view('admin.index', compact('users','roles','pruebas','lugares','niveles','gincanas','grupos')); 
+            $lugaresDestacados = LugarDestacado::with('tipoMarcador')->get();
+            $etiquetas = Etiqueta::all();
+            $tipoMarcadores = TipoMarcador::all();
+            return view('admin.index', compact('users','roles','pruebas','lugares','niveles','gincanas','grupos','tipoMarcadores','etiquetas','lugaresDestacados')); 
         }
 
         // Si no es administrador, redirigir a la página principal con un mensaje de error

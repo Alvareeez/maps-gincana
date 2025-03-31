@@ -8,6 +8,7 @@ use App\Http\Controllers\PruebaController;
 use App\Http\Controllers\LugarController;
 use App\Http\Controllers\NivelController;
 use App\Http\Controllers\GincanaController;
+use App\Http\Controllers\EtiquetaController;
 
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LugarDestacadoController;
@@ -70,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Ruta para ver el mapa (requiere estar logueado)
     Route::get('/mapa', [MapaController::class, 'index'])->name('mapa');
+    Route::get('/mapaUser', [MapaController::class, 'indexx'])->name('mapaUser');
 
     // ----------------------------------------
     // -------------- CRUDS ADMIN -------------
@@ -128,6 +130,28 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/gincanas/{gincana}', [GincanaController::class, 'update'])->name('gincanas.update');
     Route::delete('/gincanas/{gincana}', [GincanaController::class, 'destroy'])->name('gincanas.destroy');
 
+
+    // CRUDS LUGAR DESTACADO
+    Route::get('/admin/lugares-destacados', [LugarDestacadoController::class, 'index'])->name('admin.lugares-destacados.index');
+    Route::post('/admin/lugares-destacados', [LugarDestacadoController::class, 'store'])->name('admin.lugares-destacados.store');
+    Route::put('/admin/lugares-destacados/{id}', [LugarDestacadoController::class, 'update'])->name('admin.lugares-destacados.update');
+    Route::delete('/admin/lugares-destacados/{id}', [LugarDestacadoController::class, 'destroy'])->name('admin.lugares-destacados.destroy');
+
+    // CRUDS ETIQUETAS
+    Route::get('/admin/etiquetas', [EtiquetaController::class, 'index'])->name('admin.etiquetas.index');
+    Route::post('/admin/etiquetas', [EtiquetaController::class, 'store'])->name('admin.etiquetas.store');
+    Route::put('/admin/etiquetas/{id}', [EtiquetaController::class, 'update'])->name('admin.etiquetas.update');
+    Route::delete('/admin/etiquetas/{id}', [EtiquetaController::class, 'destroy'])->name('admin.etiquetas.destroy');
+
+    // CRUDS TIPO MARCADOR
+    Route::get('/admin/tipo-marcadores', [TipoMarcadorController::class, 'index'])->name('admin.tipo-marcadores.index');
+    Route::post('/admin/tipo-marcadores', [TipoMarcadorController::class, 'store'])->name('admin.tipo-marcadores.store');
+    Route::put('/admin/tipo-marcadores/{id}', [TipoMarcadorController::class, 'update'])->name('admin.tipo-marcadores.update');
+    Route::delete('/admin/tipo-marcadores/{id}', [TipoMarcadorController::class, 'destroy'])->name('admin.tipo-marcadores.destroy');
+
+
+
+
     // Rutas de gincana
     Route::prefix('gincana')->group(function () {
         // Vistas
@@ -138,6 +162,7 @@ Route::middleware(['auth'])->group(function () {
         // Acciones
         Route::post('/unirse', [GincanaController::class, 'unirseAGrupo'])->name('gincana.unirse');
         Route::post('/salir', [GincanaController::class, 'salirGrupo'])->name('gincana.salir');
+        Route::post('/responder/{id}', [GincanaController::class, 'responderPrueba']);
         
         // APIs
         Route::prefix('api')->group(function () {
@@ -145,7 +170,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/nivel-actual/{id}', [GincanaController::class, 'nivelActual']);
             Route::post('/responder/{id}', [GincanaController::class, 'responderPrueba']);
             Route::get('/gincanas-abiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.gincanas-abiertas');
-            Route::get('/grupos-disponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.grupos-disponibles');
+            Route::get('/gincana/{id}/estado', [GincanaController::class, 'verificarEstadoGincana']);
+            Route::get('/grupos-disponibles/{id}', [GincanaController::class, 'obtenerGruposGincana']);
+            Route::get('/grupo/{id}/disponibilidad', [GincanaController::class, 'verificarDisponibilidadGrupo']);
         });
     });
 });

@@ -1,22 +1,36 @@
-// Definir variables globales al inicio del archivo
+// menuLobby.js
+
 let estaCargando = false;
 let intervaloActualizacion = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const contenedorGrupos = document.getElementById('contenedorGrupos');
     const gincanaId = window.location.pathname.split('/').pop();
-    
-    // Configurar URL correctamente usando la ruta definida en Laravel
     const gruposUrl = `/gincana/api/grupos-disponibles/${gincanaId}`;
-    
-    // Cargar inmediatamente
+
     actualizarGrupos(gruposUrl);
-    
-    // Configurar intervalo de actualización
     intervaloActualizacion = setInterval(() => actualizarGrupos(gruposUrl), 10000);
-    
-    // Limpiar intervalo al salir de la página
+
     window.addEventListener('beforeunload', limpiarIntervalo);
+
+    document.addEventListener('submit', async function (event) {
+        const form = event.target;
+        if (!form.classList.contains('join-form')) return;
+
+        event.preventDefault();
+
+        const idGrupo = form.querySelector('input[name="id_grupo"]').value;
+        const token = form.querySelector('input[name="_token"]').value;
+
+        const confirmar = await verificarGrupoDisponible(idGrupo);
+
+        if (confirmar) {
+            form.submit();
+        } else {
+            alert('Este grupo ya está lleno o la gincana se ha cerrado.');
+            actualizarGrupos(gruposUrl);
+        }
+    });
 });
 
 function limpiarIntervalo() {
@@ -25,17 +39,32 @@ function limpiarIntervalo() {
     }
 }
 
-async function actualizarGrupos(url) {
-    // Evitar múltiples llamadas simultáneas
-    if (estaCargando) {
-        return;
+async function verificarGrupoDisponible(idGrupo) {
+    try {
+        const response = await fetch(`/gincana/api/grupo/${idGrupo}/disponibilidad`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const data = await response.json();
+        return data && data.disponible === true;
+    } catch (error) {
+        console.warn('Error verificando grupo:', error);
+        return false;
     }
-    
+}
+
+async function actualizarGrupos(url) {
+    if (estaCargando) return;
+
     estaCargando = true;
     const contenedorGrupos = document.getElementById('contenedorGrupos');
-    
+
     try {
-        // Mostrar estado de carga
         contenedorGrupos.classList.add('cargando');
         contenedorGrupos.innerHTML = `
             <div class="col-12 text-center">
@@ -55,31 +84,30 @@ async function actualizarGrupos(url) {
             }
         });
 
-        // Verificar si la respuesta es OK
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
+        const { success, data, message, redirect } = await response.json();
 
-        // Parsear la respuesta JSON
-        const {success, data, message, redirect} = await response.json();
-        
-        // Redirigir si es necesario
         if (redirect) {
             window.location.href = redirect;
             return;
         }
 
-        // Manejar respuesta no exitosa
         if (!success) {
-            throw new Error(message || 'Error al cargar grupos');
+            contenedorGrupos.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        ${message || 'Error al cargar grupos'}
+                    </div>
+                    <button onclick="window.location.reload()" class="btn btn-sm btn-secondary">
+                        Recargar
+                    </button>
+                </div>
+            `;
+            return;
         }
 
-        // Generar contenido HTML para los grupos disponibles
         let contenido = '';
-        
-        // Filtrar solo grupos disponibles
         const gruposDisponibles = data.filter(grupo => grupo.disponible);
-        
+
         if (gruposDisponibles.length > 0) {
             contenido = gruposDisponibles.map(grupo => `
                 <div class="col-12 col-md-6 col-lg-4 mb-3">
@@ -104,10 +132,9 @@ async function actualizarGrupos(url) {
                 </div>
             `;
         }
-        
-        // Actualizar el DOM
+
         contenedorGrupos.innerHTML = contenido;
-        
+
     } catch (error) {
         console.error('Error al cargar grupos:', error);
         contenedorGrupos.innerHTML = `
@@ -121,7 +148,6 @@ async function actualizarGrupos(url) {
             </div>
         `;
     } finally {
-        // Restablecer estado
         estaCargando = false;
         contenedorGrupos.classList.remove('cargando');
     }

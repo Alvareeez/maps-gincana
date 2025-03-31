@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->enum('estado', ['abierta', 'ocupada']);
             $table->integer('cantidad_jugadores');
             $table->integer('cantidad_grupos');
-            $table->foreignId('id_ganador')->nullable()->constrained('usuarios')->onDelete('cascade');
+            $table->integer('id_ganador')->nullable();
             $table->timestamps();
         });
     }

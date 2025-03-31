@@ -77,11 +77,18 @@ class JuegoGincana {
         
         try {
             const response = await fetch(`/gincana/api/estado-juego/${this.gincanaId}`);
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error en la respuesta del servidor');
+            }
             
             const data = await response.json();
             
-            if (data.estado === 'iniciado') {
+            if (data.estado === 'completado') {
+                return this.mostrarFinJuego(data.ganador);
+            } else if (data.estado === 'iniciado') {
+                const modalEspera = document.getElementById('modal-espera');
+                if (modalEspera) modalEspera.remove();
                 await this.iniciarJuego();
             } else if (data.estado === 'esperando') {
                 this.mostrarEstadoEsperando(data);
@@ -96,32 +103,58 @@ class JuegoGincana {
 
     async iniciarJuego() {
         try {
+            this.mostrarLoader('Cargando nivel actual...');
+            
             const response = await fetch(`/gincana/api/nivel-actual/${this.gincanaId}`);
-            if (!response.ok) throw new Error('Error al cargar nivel');
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al cargar el nivel actual');
+            }
             
             const data = await response.json();
+            
+            this.nivelActual = data.nivel;
             
             if (data.estado === 'completado') {
                 return this.mostrarFinJuego(data.ganador);
             }
             
-            this.nivelActual = data.nivel;
+            if (!data.pista || !data.pregunta || !data.ubicacion) {
+                throw new Error('Datos del nivel incompletos');
+            }
+            
             this.mostrarInterfazJuego(data);
             
-            if (!data.ubicacion) throw new Error('Ubicación no válida');
-            
-            // Actualizar modales
             document.getElementById('contenido-pista').textContent = data.pista;
             document.getElementById('texto-pregunta').textContent = data.pregunta;
             
-            // Inicializar mapa
             this.inicializarMapa(data.ubicacion);
             
-            // Mostrar pista al inicio
-            setTimeout(() => this.modales.pista.show(), 1000);
+            setTimeout(() => {
+                this.modales.pista.show();
+            }, 1000);
             
         } catch (error) {
-            this.mostrarError(`Error al iniciar juego: ${error.message}`);
+            console.error('Error al iniciar juego:', error);
+            
+            if (error.message.includes('Nivel') && error.message.includes('no encontrado')) {
+                this.mostrarError(`
+                    <h5>Error en el nivel actual</h5>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.reload()" class="btn btn-warning mt-2">
+                        <i class="fas fa-sync-alt me-2"></i>Reintentar
+                    </button>
+                `);
+            } else {
+                this.mostrarError(`
+                    <h5>Error al iniciar el juego</h5>
+                    <p>${error.message}</p>
+                    <button onclick="window.location.href='/home'" class="btn btn-danger mt-2">
+                        <i class="fas fa-home me-2"></i>Volver al menú
+                    </button>
+                `);
+            }
         }
     }
 
@@ -156,14 +189,21 @@ class JuegoGincana {
     }
 
     inicializarMapa(ubicacionObjetivo) {
+
+        if (this.mapa) {
+            this.mapa.remove(); // destruir completamente el mapa anterior
+            this.mapa = null;
+        }
+
+        
         if (!navigator.geolocation) {
             return this.mapaFallback(ubicacionObjetivo);
         }
 
         const opcionesGPS = {
             enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
+            maximumAge: 30000,
+            timeout: 20000
         };
 
         navigator.geolocation.getCurrentPosition(
@@ -179,21 +219,31 @@ class JuegoGincana {
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy
         };
-
+    
         this.ultimaPosicion = jugadorCoords;
         
-        // Configurar mapa
-        this.mapa = L.map('mapa-container', {
-            zoomControl: false,
-            tap: false
-        }).setView([jugadorCoords.lat, jugadorCoords.lng], 16);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(this.mapa);
-
-        L.control.zoom({ position: 'topright' }).addTo(this.mapa);
-
+        // Limpiar el mapa completamente si ya existe
+        if (this.mapa) {
+            this.mapa.eachLayer(layer => {
+                this.mapa.removeLayer(layer);
+            });
+        } else {
+            // Crear nuevo mapa si no existe
+            this.mapa = L.map('mapa-container', {
+                zoomControl: false,
+                tap: false
+            }).setView([jugadorCoords.lat, jugadorCoords.lng], 16);
+    
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(this.mapa);
+    
+            L.control.zoom({ position: 'topright' }).addTo(this.mapa);
+        }
+    
+        // Reiniciar objeto de marcadores
+        this.marcadores = {};
+    
         // Marcador del jugador
         this.marcadores.jugador = L.marker([jugadorCoords.lat, jugadorCoords.lng], {
             icon: L.icon({
@@ -203,24 +253,16 @@ class JuegoGincana {
             }),
             zIndexOffset: 1000
         }).addTo(this.mapa).bindPopup('Tu ubicación actual');
-
-        // Círculo de precisión
-        this.marcadores.precision = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
-            radius: jugadorCoords.accuracy,
-            color: '#3388ff',
-            fillColor: '#3388ff',
-            fillOpacity: 0.2
-        }).addTo(this.mapa);
-
-        // Radio visible (50m)
-        this.marcadores.radio = L.circle([objetivo.latitud, objetivo.longitud], {
-            radius: 50,
+    
+        // Radio visible (100m) - alrededor del jugador
+        this.marcadores.radio = L.circle([jugadorCoords.lat, jugadorCoords.lng], {
+            radius: 100,
             color: '#ffc107',
             fillColor: '#ffc107',
             fillOpacity: 0.2,
             weight: 2
         }).addTo(this.mapa);
-
+    
         // Marcador del objetivo (inicialmente invisible)
         this.marcadores.objetivo = L.marker([objetivo.latitud, objetivo.longitud], {
             opacity: 0,
@@ -231,7 +273,7 @@ class JuegoGincana {
             }),
             zIndexOffset: 900
         }).addTo(this.mapa);
-
+    
         // Iniciar seguimiento
         this.iniciarSeguimientoPosicion(objetivo);
     }
@@ -258,7 +300,7 @@ class JuegoGincana {
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy
         };
-
+    
         this.ultimaPosicion = jugadorCoords;
         
         // Actualizar marcador y círculo de precisión
@@ -266,9 +308,9 @@ class JuegoGincana {
             this.marcadores.jugador.setLatLng([jugadorCoords.lat, jugadorCoords.lng]);
         }
         
-        if (this.marcadores.precision) {
-            this.marcadores.precision.setLatLng([jugadorCoords.lat, jugadorCoords.lng])
-                .setRadius(jugadorCoords.accuracy);
+        // Mover el círculo amarillo con el jugador
+        if (this.marcadores.radio) {
+            this.marcadores.radio.setLatLng([jugadorCoords.lat, jugadorCoords.lng]);
         }
         
         // Calcular distancia al objetivo
@@ -279,7 +321,7 @@ class JuegoGincana {
         
         // Mostrar/ocultar marcador según distancia
         if (this.marcadores.objetivo) {
-            if (distancia <= 50) {
+            if (distancia <= 100) {
                 this.marcadores.objetivo.setOpacity(1);
                 this.marcadores.objetivo.bindPopup(`
                     <div class="text-center">
@@ -289,7 +331,8 @@ class JuegoGincana {
                             <i class="fas fa-question-circle me-1"></i>Responder pregunta
                         </button>
                     </div>
-                `).openPopup();
+                `);
+                
             } else {
                 this.marcadores.objetivo.setOpacity(0);
                 this.marcadores.objetivo.closePopup();
@@ -325,96 +368,207 @@ class JuegoGincana {
         const respuesta = respuestaInput?.value.trim() || '';
         const spinner = document.getElementById('spinner-respuesta');
         const btnEnviar = document.getElementById('btn-enviar-respuesta');
-        
+
         if (!respuesta) {
-            if (respuestaInput) respuestaInput.classList.add('is-invalid');
-            const feedback = document.getElementById('feedback-respuesta');
-            if (feedback) feedback.textContent = 'Por favor, introduce una respuesta';
+            this.mostrarFeedback('Por favor ingresa una respuesta', 'warning');
             return;
         }
-        
+
         if (spinner) spinner.classList.remove('d-none');
         if (btnEnviar) btnEnviar.disabled = true;
-        
+
         try {
             const response = await fetch(`/gincana/api/responder/${this.gincanaId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ respuesta })
             });
-            
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
-            
+
             const data = await response.json();
-            
-            if (data.estado === 'correcto') {
-                this.mostrarFeedback('¡Respuesta correcta!', 'success');
-                this.modales.pregunta.hide();
-                
-                if (data.completado) {
-                    this.mostrarLoader('Esperando al resto del grupo...');
-                    setTimeout(() => this.iniciarJuego(), 5000);
-                }
-            } else if (data.estado === 'nivel_completado') {
-                this.mostrarFeedback('¡Nivel completado!', 'success');
-                this.modales.pregunta.hide();
-                this.mostrarLoader('Cargando siguiente nivel...');
-                setTimeout(() => this.iniciarJuego(), 3000);
-            } else if (data.estado === 'completado') {
-                this.mostrarFinJuego(data.ganador);
-            } else {
-                this.mostrarFeedback('Respuesta incorrecta', 'danger');
-                if (respuestaInput) respuestaInput.classList.add('is-invalid');
-                const feedback = document.getElementById('feedback-respuesta');
-                if (feedback) feedback.textContent = 'La respuesta no es correcta';
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en la respuesta del servidor');
             }
+
+            if (data.completado) {
+                this.modales.pregunta.hide();
+                this.ocultarObjetivo();
+                this.mostrarFinJuego(data.ganador);
+            }
+
+            else if (data.nivel_completado) {
+                this.modales.pregunta.hide();
+                this.ocultarObjetivo();
+                this.mostrarFeedback('¡Nivel completado! Cargando siguiente...', 'success');
+                setTimeout(() => this.iniciarJuego(), 2000);
+            }
+            else if (data.correcto) {
+                this.modales.pregunta.hide();
+                this.ocultarObjetivo();
+                this.mostrarEsperandoGrupo();
+                this.esperarAvanceGrupo();
+            }
+            else {
+                this.mostrarFeedback(data.message, 'danger');
+            }
+
         } catch (error) {
-            this.mostrarFeedback('Error al enviar respuesta', 'danger');
+            console.error('Error al procesar respuesta:', error);
+            this.mostrarFeedback(error.message, 'danger');
+            if (error.message.includes('500')) {
+                this.mostrarFeedback('Error del servidor. Intenta recargar la página', 'danger');
+            }
         } finally {
             if (spinner) spinner.classList.add('d-none');
             if (btnEnviar) btnEnviar.disabled = false;
         }
     }
 
-    mostrarEstadoEsperando(data) {
-        this.contenedorEstado.innerHTML = `
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card mb-3">
-                        <div class="card-header bg-warning text-dark">
-                            <h4 class="mb-0"><i class="fas fa-users me-2"></i>Esperando jugadores</h4>
-                        </div>
-                        <div class="card-body">
-                            <p class="lead">Esperando a que se unan todos los jugadores...</p>
-                            <div class="progress mb-4" style="height: 20px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" style="width: ${this.calcularProgreso(data.grupos)}%">
-                                </div>
-                            </div>
-                            <div class="row" id="contenedor-grupos">
-                                ${data.grupos.map(grupo => this.crearTarjetaGrupo(grupo)).join('')}
-                            </div>
-                        </div>
-                        <div class="card-footer text-center">
-                            <div class="spinner-border text-warning" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-2 mb-0">Actualizando en 5 segundos...</p>
-                        </div>
+    ocultarObjetivo() {
+        if (this.marcadores.objetivo) {
+            this.marcadores.objetivo.remove();
+            delete this.marcadores.objetivo;
+        }
+    }
+
+    mostrarEsperandoGrupo() {
+        if (document.getElementById('modal-espera')) return;
+
+        const esperaModal = document.createElement('div');
+        esperaModal.id = 'modal-espera';
+        esperaModal.className = 'modal fade show d-block';
+        esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        esperaModal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">Esperando al resto del grupo</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-warning mb-3" role="status"></div>
+                        <p>Has respondido correctamente. Esperando a los demás jugadores...</p>
+                        <p id="contador-jugadores-restantes">Calculando...</p>
                     </div>
                 </div>
             </div>
         `;
+        document.body.appendChild(esperaModal);
     }
 
-    calcularProgreso(grupos) {
-        const totalJugadores = grupos.reduce((sum, grupo) => sum + grupo.max_jugadores, 0);
-        const jugadoresConectados = grupos.reduce((sum, grupo) => sum + grupo.jugadores, 0);
-        return Math.round((jugadoresConectados / totalJugadores) * 100);
+    actualizarContadorRestantes() {
+        fetch(`/gincana/api/estado-juego/${this.gincanaId}`)
+            .then(res => res.json())
+            .then(data => {
+                const grupo = data.grupos.find(g => g.es_mi_grupo);
+                if (grupo && grupo.jugadores_completados !== undefined) {
+                    const restante = grupo.max_jugadores - grupo.jugadores_completados;
+                    const texto = document.getElementById('contador-jugadores-restantes');
+                    if (texto) texto.textContent = `Jugadores restantes: ${restante}`;
+                }
+            })
+            .catch(err => console.warn('No se pudo actualizar el contador:', err));
     }
+
+    esperarAvanceGrupo() {
+        this.actualizarContadorRestantes();
+
+        if (this.intervaloEsperaGrupo) {
+            clearInterval(this.intervaloEsperaGrupo);
+        }
+
+        this.intervaloEsperaGrupo = setInterval(async () => {
+            try {
+                const res = await fetch(`/gincana/api/nivel-actual/${this.gincanaId}`);
+                const data = await res.json();
+
+                if (data.nivel > this.nivelActual) {
+                    clearInterval(this.intervaloEsperaGrupo);
+                    const modalEspera = document.getElementById('modal-espera');
+                    if (modalEspera) modalEspera.remove();
+                    this.iniciarJuego();
+                } else {
+                    this.actualizarContadorRestantes();
+                }
+            } catch (e) {
+                console.warn('Error esperando avance:', e);
+            }
+        }, 5000);
+    }
+
+    mostrarEstadoEsperando(data) {
+        let modal = document.getElementById('modal-espera');
+    
+        if (!modal) {
+            const esperaModal = document.createElement('div');
+            esperaModal.id = 'modal-espera';
+            esperaModal.className = 'modal fade show d-block';
+            esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            esperaModal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">Esperando a que todos los jugadores se unan</h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="spinner-border text-warning mb-3" role="status"></div>
+                            <p>Estamos esperando que todos los grupos estén completos para comenzar la gincana.</p>
+                            <p id="contador-jugadores-restantes">Calculando...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(esperaModal);
+        }
+    
+        // SIEMPRE actualiza el contador
+        this.actualizarContadorRestantesGlobal(data.grupos);
+    
+        // Crear o reiniciar el intervalo
+        if (this.intervaloEsperandoInicio) {
+            clearInterval(this.intervaloEsperandoInicio);
+        }
+    
+        this.intervaloEsperandoInicio = setInterval(async () => {
+            try {
+                const res = await fetch(`/gincana/api/estado-juego/${this.gincanaId}`);
+                const dataActualizada = await res.json();
+    
+                if (dataActualizada.estado === 'iniciado') {
+                    clearInterval(this.intervaloEsperandoInicio);
+                    const modalEspera = document.getElementById('modal-espera');
+                    if (modalEspera) modalEspera.remove();
+                    await this.iniciarJuego();
+                } else {
+                    // Aquí también actualizas el contador siempre
+                    this.actualizarContadorRestantesGlobal(dataActualizada);
+                }
+            } catch (e) {
+                console.warn('Error actualizando estado global:', e);
+            }
+        }, 5000);
+    }
+    
+
+    actualizarContadorRestantesGlobal(grupos) {
+        let totalJugadores = 0;
+        let conectados = 0;
+    
+        if (Array.isArray(grupos)) {
+            grupos.forEach(grupo => {
+                totalJugadores += grupo.max_jugadores;
+                conectados += grupo.jugadores || 0;
+            });
+        }
+    
+        const restantes = totalJugadores - conectados;
+        const texto = document.getElementById('contador-jugadores-restantes');
+        if (texto) texto.textContent = `Jugadores restantes: ${restantes}`;
+    }    
+    
+    
 
     crearTarjetaGrupo(grupo) {
         return `
@@ -445,62 +599,58 @@ class JuegoGincana {
     }
 
     mostrarFinJuego(ganador) {
+        // Detener seguimiento GPS si está activo
         if (this.watchId) {
             navigator.geolocation.clearWatch(this.watchId);
         }
-        
-        if (ganador) {
-            this.contenedorEstado.innerHTML = `
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card text-center border-success">
-                            <div class="card-header bg-success text-white">
-                                <h3 class="mb-0"><i class="fas fa-trophy me-2"></i>¡Felicidades!</h3>
+    
+        // Mostrar mensaje final personalizado
+        const mensajeFinal = ganador
+            ? {
+                clase: 'success',
+                icono: 'fas fa-trophy',
+                titulo: '¡Felicidades!',
+                subtitulo: '¡Tu grupo ha ganado la gincana!',
+                texto: 'Has completado todos los niveles correctamente.',
+                btnTexto: 'Volver al menú',
+                btnClase: 'btn-success'
+            }
+            : {
+                clase: 'danger',
+                icono: 'fas fa-flag',
+                titulo: 'Juego terminado',
+                subtitulo: 'Otro grupo ha completado la gincana primero',
+                texto: 'Sigue intentándolo para la próxima.',
+                btnTexto: 'Volver al menú',
+                btnClase: 'btn-danger'
+            };
+    
+        this.contenedorEstado.innerHTML = `
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card text-center border-${mensajeFinal.clase}">
+                        <div class="card-header bg-${mensajeFinal.clase} text-white">
+                            <h3 class="mb-0"><i class="${mensajeFinal.icono} me-2"></i>${mensajeFinal.titulo}</h3>
+                        </div>
+                        <div class="card-body py-5">
+                            <div class="display-4 text-${mensajeFinal.clase} mb-4">
+                                <i class="${mensajeFinal.icono}"></i>
                             </div>
-                            <div class="card-body py-5">
-                                <div class="display-4 text-success mb-4">
-                                    <i class="fas fa-medal"></i>
-                                </div>
-                                <h4 class="card-title">¡Tu grupo ha ganado la gincana!</h4>
-                                <p class="card-text">Has completado todos los niveles correctamente.</p>
-                                <a href="/gincana" class="btn btn-success btn-lg mt-3">
-                                    <i class="fas fa-home me-2"></i>Volver al menú
-                                </a>
-                            </div>
-                            <div class="card-footer text-muted">
-                                ¡Gracias por jugar!
-                            </div>
+                            <h4 class="card-title">${mensajeFinal.subtitulo}</h4>
+                            <p class="card-text">${mensajeFinal.texto}</p>
+                            <a href="/home" class="btn ${mensajeFinal.btnClase} btn-lg mt-3">
+                                <i class="fas fa-home me-2"></i>${mensajeFinal.btnTexto}
+                            </a>
+                        </div>
+                        <div class="card-footer text-muted">
+                            ¡Gracias por jugar!
                         </div>
                     </div>
                 </div>
-            `;
-        } else {
-            this.contenedorEstado.innerHTML = `
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card text-center border-danger">
-                            <div class="card-header bg-danger text-white">
-                                <h3 class="mb-0"><i class="fas fa-flag me-2"></i>Juego terminado</h3>
-                            </div>
-                            <div class="card-body py-5">
-                                <div class="display-4 text-danger mb-4">
-                                    <i class="fas fa-hourglass-end"></i>
-                                </div>
-                                <h4 class="card-title">Otro grupo ha completado la gincana primero</h4>
-                                <p class="card-text">Sigue intentándolo para la próxima.</p>
-                                <a href="/gincana" class="btn btn-danger btn-lg mt-3">
-                                    <i class="fas fa-home me-2"></i>Volver al menú
-                                </a>
-                            </div>
-                            <div class="card-footer text-muted">
-                                ¡Mejor suerte la próxima vez!
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+            </div>
+        `;
     }
+    
 
     mapaFallback(objetivo) {
         const coords = objetivo || { latitud: 40.4168, longitud: -3.7038 };
@@ -510,7 +660,7 @@ class JuegoGincana {
             console.error('Contenedor del mapa no encontrado en modo fallback');
             return;
         }
-
+    
         this.mapa = L.map(mapaContainer, {
             zoomControl: false
         }).setView([coords.latitud, coords.longitud], 16);
@@ -522,7 +672,7 @@ class JuegoGincana {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(this.mapa);
-
+    
         L.popup()
             .setLatLng([coords.latitud, coords.longitud])
             .setContent(`
@@ -533,7 +683,8 @@ class JuegoGincana {
                 </div>
             `)
             .openOn(this.mapa);
-
+    
+        // Círculo amarillo alrededor del centro en modo fallback
         this.marcadores.radio = L.circle([coords.latitud, coords.longitud], {
             radius: 50,
             color: '#ffc107',
@@ -541,7 +692,8 @@ class JuegoGincana {
             fillOpacity: 0.2,
             weight: 2
         }).addTo(this.mapa);
-
+    
+        // Marcador del objetivo (siempre visible en modo fallback)
         this.marcadores.objetivo = L.marker([coords.latitud, coords.longitud], {
             icon: L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -572,9 +724,14 @@ class JuegoGincana {
                 );
             }, 1000);
         } else {
-            this.mapaFallback(objetivo);
-            this.modales.pista.show();
-            this.mostrarErrorGPS(error);
+            if (!this.mapa) {
+                this.mapaFallback(objetivo);
+            }
+            
+            if (!this.errorMostrado) {
+                this.errorMostrado = true;
+                this.mostrarErrorGPS(error);
+            }
         }
     }
 
@@ -623,13 +780,12 @@ class JuegoGincana {
     }
 
     mostrarLoader(mensaje) {
-        if (this.contenedorEstado) {
-            this.contenedorEstado.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-3 lead">${mensaje}</p>
+        const contenedor = document.getElementById('estado-juego');
+        if (contenedor) {
+            contenedor.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">${mensaje}</p>
                 </div>
             `;
         }
@@ -675,12 +831,12 @@ class JuegoGincana {
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
         const Δλ = (lon2-lon1) * Math.PI/180;
-
+    
         const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
                 Math.cos(φ1) * Math.cos(φ2) *
                 Math.sin(Δλ/2) * Math.sin(Δλ/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
+    
         return R * c;
     }
 }
@@ -754,3 +910,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+setInterval(async () => {
+    try {
+        const gincanaId = document.querySelector('script[data-gincana-id]')?.getAttribute('data-gincana-id');
+        if (!gincanaId) return;
+
+        const response = await fetch(`/gincana/api/estado-juego/${gincanaId}`);
+        const data = await response.json();
+
+        // Verificar si hay un grupo ganador registrado
+        if (data.id_ganador) {
+            const miGrupo = data.grupos.find(g => g.es_mi_grupo);
+            const esGanador = miGrupo && data.id_ganador === miGrupo.id;
+
+            // Mostrar mensaje de fin de juego indicando el grupo ganador
+            if (typeof window.juegoGincana?.mostrarFinJuego === 'function') {
+                window.juegoGincana.mostrarFinJuego(esGanador, data.nombre_ganador);
+            }
+        }
+
+    } catch (error) {
+        console.error("Error comprobando estado del juego:", error);
+    }
+}, 10000); // cada 10s

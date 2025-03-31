@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('favoritos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_lista')->constrained('listas')->onDelete('cascade'); // Relación con listas
-            $table->foreignId('lugar_destacado_id')->constrained('lugares_destacados')->onDelete('cascade'); // Relación con lugares destacados
+            $table->foreignId('id_lista')->nullable()->constrained('listas')->onDelete('cascade'); // Hacer nullable
+            $table->foreignId('lugar_destacado_id')->constrained('lugares_destacados')->onDelete('cascade');
             $table->foreignId('tipoMarcador')->constrained('tipo_marcador')->onDelete('cascade');
             $table->timestamps();
 
-            // Evitar que un usuario guarde el mismo lugar más de una vez como favorito
-            $table->unique(['id_lista', 'lugar_destacado_id']);
+            $table->unique(['lugar_destacado_id', 'id_lista']);
         });
     }
 

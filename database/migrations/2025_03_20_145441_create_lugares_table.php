@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->string('nombre');
             $table->string('pista');
-            $table->decimal('latitud', 8, 2);
-            $table->decimal('longitud', 8, 2);
+            $table->decimal('latitud', 10, 8);
+            $table->decimal('longitud', 10, 8);
             $table->timestamps();
         });
     }
