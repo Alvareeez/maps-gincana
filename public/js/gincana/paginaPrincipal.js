@@ -1,16 +1,14 @@
+// paginaPrincipal.js
+
 let estaCargando = false;
 let ultimaActualizacion = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     const contenedorGincanas = document.getElementById('contenedorGincanas');
-    
-    // Cargar inmediatamente
+
     actualizarGincanas();
-    
-    // Actualizar cada 10 segundos
     const intervalo = setInterval(actualizarGincanas, 10000);
-    
-    // Opcional: Detener intervalo cuando la página no está visible
+
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
             clearInterval(intervalo);
@@ -22,19 +20,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function actualizarGincanas() {
-    // Evitar solapamientos y actualizaciones demasiado frecuentes
     const ahora = Date.now();
-    if (estaCargando || (ahora - ultimaActualizacion < 5000)) {
-        return;
-    }
-    
+    if (estaCargando || (ahora - ultimaActualizacion < 5000)) return;
+
     estaCargando = true;
     ultimaActualizacion = ahora;
-    
+
     const contenedorGincanas = document.getElementById('contenedorGincanas');
     const gincanasUrl = contenedorGincanas.dataset.gincanasUrl;
     contenedorGincanas.classList.add('actualizando');
-    
+
     try {
         const response = await fetch(gincanasUrl, {
             method: 'GET',
@@ -45,18 +40,12 @@ async function actualizarGincanas() {
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
         const {success, data, message} = await response.json();
-        
-        if (!success) {
-            throw new Error(message || 'Error al cargar gincanas');
-        }
+        if (!success) throw new Error(message || 'Error al cargar gincanas');
 
         let contenido = '';
-        
         if (data && data.length > 0) {
             contenido = data.map(gincana => `
                 <div class="col-12 col-md-6 col-lg-4 mb-3">
@@ -79,9 +68,8 @@ async function actualizarGincanas() {
                 </div>
             `;
         }
-        
         contenedorGincanas.innerHTML = contenido;
-        
+
     } catch (error) {
         console.error('Error al cargar gincanas:', error);
         contenedorGincanas.innerHTML = `
@@ -99,24 +87,41 @@ async function actualizarGincanas() {
     }
 }
 
-// Función para manejar la confirmación de unión
-function confirmarUnirse(event, gincanaId) {
+// Solo comprueba si la gincana está ocupada
+async function confirmarUnirse(event, gincanaId) {
+    event.preventDefault();
+
     if (estaCargando) {
-        event.preventDefault();
         alert('Por favor espera, se está procesando otra acción');
         return false;
     }
-    
+
     estaCargando = true;
-    
-    // Opcional: Mostrar spinner en el botón clickeado
-    const boton = event.target.closest('a');
-    const originalHtml = boton.innerHTML;
-    boton.innerHTML = `
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Uniendo...
-    `;
-    
-    // Continuar con la navegación normal
-    return true;
+
+    try {
+        const res = await fetch(`/gincana/api/gincana/${gincanaId}/estado`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const data = await res.json();
+
+        if (!data.disponible) {
+            alert('Esta gincana ya ha comenzado. Intenta con otra.');
+            window.location.reload();
+            return false;
+        }
+
+        window.location.href = `/gincana/lobby/${gincanaId}`;
+        return true;
+
+    } catch (err) {
+        alert('Error al verificar disponibilidad. Intenta de nuevo.');
+        console.error(err);
+        estaCargando = false;
+        return false;
+    }
 }

@@ -170,7 +170,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/nivel-actual/{id}', [GincanaController::class, 'nivelActual']);
             Route::post('/responder/{id}', [GincanaController::class, 'responderPrueba']);
             Route::get('/gincanas-abiertas', [GincanaController::class, 'obtenerGincanasAbiertas'])->name('gincana.gincanas-abiertas');
-            Route::get('/grupos-disponibles/{id}', [GincanaController::class, 'obtenerGruposGincana'])->name('gincana.grupos-disponibles');
+            Route::get('/gincana/{id}/estado', [GincanaController::class, 'verificarEstadoGincana']);
+            Route::get('/grupos-disponibles/{id}', [GincanaController::class, 'obtenerGruposGincana']);
+            Route::get('/grupo/{id}/disponibilidad', [GincanaController::class, 'verificarDisponibilidadGrupo']);
         });
     });
 });

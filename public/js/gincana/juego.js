@@ -150,7 +150,7 @@ class JuegoGincana {
                 this.mostrarError(`
                     <h5>Error al iniciar el juego</h5>
                     <p>${error.message}</p>
-                    <button onclick="window.location.href='/gincana'" class="btn btn-danger mt-2">
+                    <button onclick="window.location.href='/home'" class="btn btn-danger mt-2">
                         <i class="fas fa-home me-2"></i>Volver al menú
                     </button>
                 `);
@@ -499,37 +499,65 @@ class JuegoGincana {
     }
 
     mostrarEstadoEsperando(data) {
-        if (document.getElementById('modal-espera')) return;
+        let modal = document.getElementById('modal-espera');
     
-        const esperaModal = document.createElement('div');
-        esperaModal.id = 'modal-espera';
-        esperaModal.className = 'modal fade show d-block';
-        esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        esperaModal.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning">
-                        <h5 class="modal-title">Esperando a que todos los jugadores se unan</h5>
-                    </div>
-                    <div class="modal-body text-center">
-                        <div class="spinner-border text-warning mb-3" role="status"></div>
-                        <p>Estamos esperando que todos los grupos estén completos para comenzar la gincana.</p>
-                        <p id="contador-jugadores-restantes">Calculando...</p>
+        if (!modal) {
+            const esperaModal = document.createElement('div');
+            esperaModal.id = 'modal-espera';
+            esperaModal.className = 'modal fade show d-block';
+            esperaModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            esperaModal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">Esperando a que todos los jugadores se unan</h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="spinner-border text-warning mb-3" role="status"></div>
+                            <p>Estamos esperando que todos los grupos estén completos para comenzar la gincana.</p>
+                            <p id="contador-jugadores-restantes">Calculando...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+            document.body.appendChild(esperaModal);
+        }
     
-        document.body.appendChild(esperaModal);
-        this.actualizarContadorRestantesGlobal(data);
+        // SIEMPRE actualiza el contador
+        this.actualizarContadorRestantesGlobal(data.grupos);
+    
+        // Crear o reiniciar el intervalo
+        if (this.intervaloEsperandoInicio) {
+            clearInterval(this.intervaloEsperandoInicio);
+        }
+    
+        this.intervaloEsperandoInicio = setInterval(async () => {
+            try {
+                const res = await fetch(`/gincana/api/estado-juego/${this.gincanaId}`);
+                const dataActualizada = await res.json();
+    
+                if (dataActualizada.estado === 'iniciado') {
+                    clearInterval(this.intervaloEsperandoInicio);
+                    const modalEspera = document.getElementById('modal-espera');
+                    if (modalEspera) modalEspera.remove();
+                    await this.iniciarJuego();
+                } else {
+                    // Aquí también actualizas el contador siempre
+                    this.actualizarContadorRestantesGlobal(dataActualizada);
+                }
+            } catch (e) {
+                console.warn('Error actualizando estado global:', e);
+            }
+        }, 5000);
     }
+    
 
-    actualizarContadorRestantesGlobal(data) {
+    actualizarContadorRestantesGlobal(grupos) {
         let totalJugadores = 0;
         let conectados = 0;
     
-        if (Array.isArray(data.grupos)) {
-            data.grupos.forEach(grupo => {
+        if (Array.isArray(grupos)) {
+            grupos.forEach(grupo => {
                 totalJugadores += grupo.max_jugadores;
                 conectados += grupo.jugadores || 0;
             });
@@ -538,7 +566,7 @@ class JuegoGincana {
         const restantes = totalJugadores - conectados;
         const texto = document.getElementById('contador-jugadores-restantes');
         if (texto) texto.textContent = `Jugadores restantes: ${restantes}`;
-    }
+    }    
     
     
 
@@ -571,62 +599,58 @@ class JuegoGincana {
     }
 
     mostrarFinJuego(ganador) {
+        // Detener seguimiento GPS si está activo
         if (this.watchId) {
             navigator.geolocation.clearWatch(this.watchId);
         }
-        
-        if (ganador) {
-            this.contenedorEstado.innerHTML = `
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card text-center border-success">
-                            <div class="card-header bg-success text-white">
-                                <h3 class="mb-0"><i class="fas fa-trophy me-2"></i>¡Felicidades!</h3>
+    
+        // Mostrar mensaje final personalizado
+        const mensajeFinal = ganador
+            ? {
+                clase: 'success',
+                icono: 'fas fa-trophy',
+                titulo: '¡Felicidades!',
+                subtitulo: '¡Tu grupo ha ganado la gincana!',
+                texto: 'Has completado todos los niveles correctamente.',
+                btnTexto: 'Volver al menú',
+                btnClase: 'btn-success'
+            }
+            : {
+                clase: 'danger',
+                icono: 'fas fa-flag',
+                titulo: 'Juego terminado',
+                subtitulo: 'Otro grupo ha completado la gincana primero',
+                texto: 'Sigue intentándolo para la próxima.',
+                btnTexto: 'Volver al menú',
+                btnClase: 'btn-danger'
+            };
+    
+        this.contenedorEstado.innerHTML = `
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card text-center border-${mensajeFinal.clase}">
+                        <div class="card-header bg-${mensajeFinal.clase} text-white">
+                            <h3 class="mb-0"><i class="${mensajeFinal.icono} me-2"></i>${mensajeFinal.titulo}</h3>
+                        </div>
+                        <div class="card-body py-5">
+                            <div class="display-4 text-${mensajeFinal.clase} mb-4">
+                                <i class="${mensajeFinal.icono}"></i>
                             </div>
-                            <div class="card-body py-5">
-                                <div class="display-4 text-success mb-4">
-                                    <i class="fas fa-medal"></i>
-                                </div>
-                                <h4 class="card-title">¡Tu grupo ha ganado la gincana!</h4>
-                                <p class="card-text">Has completado todos los niveles correctamente.</p>
-                                <a href="/gincana" class="btn btn-success btn-lg mt-3">
-                                    <i class="fas fa-home me-2"></i>Volver al menú
-                                </a>
-                            </div>
-                            <div class="card-footer text-muted">
-                                ¡Gracias por jugar!
-                            </div>
+                            <h4 class="card-title">${mensajeFinal.subtitulo}</h4>
+                            <p class="card-text">${mensajeFinal.texto}</p>
+                            <a href="/home" class="btn ${mensajeFinal.btnClase} btn-lg mt-3">
+                                <i class="fas fa-home me-2"></i>${mensajeFinal.btnTexto}
+                            </a>
+                        </div>
+                        <div class="card-footer text-muted">
+                            ¡Gracias por jugar!
                         </div>
                     </div>
                 </div>
-            `;
-        } else {
-            this.contenedorEstado.innerHTML = `
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card text-center border-danger">
-                            <div class="card-header bg-danger text-white">
-                                <h3 class="mb-0"><i class="fas fa-flag me-2"></i>Juego terminado</h3>
-                            </div>
-                            <div class="card-body py-5">
-                                <div class="display-4 text-danger mb-4">
-                                    <i class="fas fa-hourglass-end"></i>
-                                </div>
-                                <h4 class="card-title">Otro grupo ha completado la gincana primero</h4>
-                                <p class="card-text">Sigue intentándolo para la próxima.</p>
-                                <a href="/gincana" class="btn btn-danger btn-lg mt-3">
-                                    <i class="fas fa-home me-2"></i>Volver al menú
-                                </a>
-                            </div>
-                            <div class="card-footer text-muted">
-                                ¡Mejor suerte la próxima vez!
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+            </div>
+        `;
     }
+    
 
     mapaFallback(objetivo) {
         const coords = objetivo || { latitud: 40.4168, longitud: -3.7038 };
@@ -887,8 +911,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Estado del juego polling agregado el 2025-03-30 15:54:15.314412
-
 setInterval(async () => {
     try {
         const gincanaId = document.querySelector('script[data-gincana-id]')?.getAttribute('data-gincana-id');
@@ -897,16 +919,14 @@ setInterval(async () => {
         const response = await fetch(`/gincana/api/estado-juego/${gincanaId}`);
         const data = await response.json();
 
-        if (data.estado === 'completado') {
-            const modalEspera = document.getElementById('modal-espera');
-            if (modalEspera) modalEspera.remove();
+        // Verificar si hay un grupo ganador registrado
+        if (data.id_ganador) {
+            const miGrupo = data.grupos.find(g => g.es_mi_grupo);
+            const esGanador = miGrupo && data.id_ganador === miGrupo.id;
 
-            if (typeof window.juegoGincana?.modales?.pregunta?.hide === 'function') {
-                window.juegoGincana.modales.pregunta.hide();
-            }
-
+            // Mostrar mensaje de fin de juego indicando el grupo ganador
             if (typeof window.juegoGincana?.mostrarFinJuego === 'function') {
-                window.juegoGincana.mostrarFinJuego(data.ganador);
+                window.juegoGincana.mostrarFinJuego(esGanador, data.nombre_ganador);
             }
         }
 
