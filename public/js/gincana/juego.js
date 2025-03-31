@@ -86,7 +86,9 @@ class JuegoGincana {
             const data = await response.json();
             
             if (data.estado === 'completado') {
-                return this.mostrarFinJuego(data.ganador);
+                const miGrupo = data.grupos?.find(g => g.es_mi_grupo);
+                const esGanador = miGrupo && data.ganador_anterior === miGrupo.nombre;
+                return this.mostrarFinJuego(esGanador);
             } else if (data.estado === 'iniciado') {
                 const modalEspera = document.getElementById('modal-espera');
                 if (modalEspera) modalEspera.remove();
@@ -118,8 +120,10 @@ class JuegoGincana {
             this.nivelActual = data.nivel;
             
             if (data.estado === 'completado') {
-                return this.mostrarFinJuego(data.ganador);
-            }
+                const miGrupo = data.grupos?.find(g => g.es_mi_grupo);
+                const esGanador = miGrupo && data.ganador_anterior === miGrupo.nombre;
+                return this.mostrarFinJuego(esGanador);
+            }            
             
             if (!data.pista || !data.pregunta || !data.ubicacion) {
                 throw new Error('Datos del nivel incompletos');
@@ -916,26 +920,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-setInterval(async () => {
+// Este intervalo se encarga de comprobar si el juego ha finalizado
+const intervaloComprobacionFin = setInterval(async () => {
     try {
         const gincanaId = document.querySelector('script[data-gincana-id]')?.getAttribute('data-gincana-id');
-        if (!gincanaId) return;
+        if (!gincanaId || !window.juegoGincana) return;
 
         const response = await fetch(`/gincana/api/estado-juego/${gincanaId}`);
+        if (!response.ok) return;
+
         const data = await response.json();
 
-        // Verificar si hay un grupo ganador registrado
-        if (data.id_ganador) {
-            const miGrupo = data.grupos.find(g => g.es_mi_grupo);
-            const esGanador = miGrupo && data.id_ganador === miGrupo.id;
-
-            // Mostrar mensaje de fin de juego indicando el grupo ganador
-            if (typeof window.juegoGincana?.mostrarFinJuego === 'function') {
-                window.juegoGincana.mostrarFinJuego(esGanador, data.nombre_ganador);
+        if (data.estado === 'completado') {
+            const miGrupo = data.grupos?.find(g => g.es_mi_grupo);
+            const esGanador = miGrupo && data.ganador_anterior === miGrupo.nombre;
+        
+            if (!window.juegoGincana.juegoFinalizado) {
+                window.juegoGincana.mostrarFinJuego(esGanador);
+                window.juegoGincana.juegoFinalizado = true;
             }
-        }
-
+        
+            clearInterval(intervaloComprobacionFin);
+        }        
     } catch (error) {
-        console.error("Error comprobando estado del juego:", error);
+        console.error("Error comprobando fin de juego:", error);
     }
-}, 10000); // cada 10s
+}, 10000);
