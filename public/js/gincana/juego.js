@@ -933,15 +933,18 @@ const intervaloComprobacionFin = setInterval(async () => {
 
         if (data.estado === 'completado') {
             const miGrupo = data.grupos?.find(g => g.es_mi_grupo);
-            const esGanador = miGrupo && data.ganador_anterior === miGrupo.nombre;
-        
-            if (!window.juegoGincana.juegoFinalizado) {
-                window.juegoGincana.mostrarFinJuego(esGanador);
-                window.juegoGincana.juegoFinalizado = true;
-            }
-        
+
+            const esGanador = data.ganador === true || (miGrupo && data.ganador_anterior === miGrupo.nombre);
+
+            const modalEspera = document.getElementById('modal-espera');
+            if (modalEspera) modalEspera.remove();
+
+
+            window.juegoGincana.mostrarFinJuego(esGanador);
+            window.juegoGincana.juegoFinalizado = true;
+
             clearInterval(intervaloComprobacionFin);
-        }        
+        }
     } catch (error) {
         console.error("Error comprobando fin de juego:", error);
     }
