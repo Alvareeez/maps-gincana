@@ -31,12 +31,7 @@ var userLocationIcon = L.icon({
 });
 
 // Intentar localizar al usuario
-map.locate({
-    setView: true,
-    maxZoom: 15,
-    watch: true,          // Activa el modo de seguimiento
-    enableHighAccuracy: true // Mayor precisión (opcional)
-});
+map.locate({ setView: true, maxZoom: 15 });
 
 // Crear un control personalizado para el botón de home
 var homeControl = L.Control.extend({
@@ -74,17 +69,10 @@ map.on('locationfound', function (e) {
     userLat = e.latitude;
     userLng = e.longitude;
 
-    // Eliminar marcador anterior si existe
-    if (window.userMarker) {
-        map.removeLayer(window.userMarker);
-    }
-
-    // Crear nuevo marcador
-    window.userMarker = L.marker([userLat, userLng], { icon: userLocationIcon })
+    // Añadir un marcador con el icono personalizado en la ubicación del usuario
+    L.marker([userLat, userLng], { icon: userLocationIcon }).addTo(map)
         .bindPopup('Estás aquí.')
-        .addTo(map);
-
-    // Actualizar círculo de radio
+        .openPopup();// Eliminar el círculo anterior si existe
     if (userLocationCircle) {
         map.removeLayer(userLocationCircle);
     }
