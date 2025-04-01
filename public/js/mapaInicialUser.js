@@ -61,13 +61,8 @@ var userLocationIcon = L.icon({
     popupAnchor: [0, -32]
 });
 
-// Intentar localizar al usuario
-map.locate({
-    setView: true,
-    maxZoom: 15,
-    watch: true,          // Activa el modo de seguimiento
-    enableHighAccuracy: true // Mayor precisión (opcional)
-});
+map.locate({ setView: true, maxZoom: 15 });
+
 
 // Evento que se activa cuando se encuentra la ubicación del usuario
 map.on('locationfound', function (e) {
